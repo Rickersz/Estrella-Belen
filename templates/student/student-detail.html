@@ -1,0 +1,76 @@
+{% extends 'Home/base.html' %}
+
+{% block page_title %} Preskool - Student Details {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 class="page-title">Student Details</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Student</a></li>
+                <li class="breadcrumb-item active">Student Details</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="about-info">
+                    <h4>About Me</h4>
+                    <div class="d-flex mt-3">
+                        <img src="{% if student.student_image %} {{ student.student_image.url }} {% endif %}"
+                            class="me-3" alt="Student Image">
+                        <div>
+                            <ul>
+                                <li>
+                                    <span class="title-span">Full Name : </span>
+                                    <span class="info-span">{{student.first_name}} {{student.last_name}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Class : </span>
+                                    <span class="info-span">{{student.student_class}} ({{student.section}})</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Mobile : </span>
+                                    <span class="info-span">{{student.mobile_number}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Email : </span>
+                                    <span class="info-span">
+                                        <a href="https://preschool.dreamguystech.com/cdn-cgi/l/email-protection"
+                                            class="__cf_email__"
+                                            data-cfemail="7216131b010b32151f131b1e5c111d1f">[email&#160;protected]</a>
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Gender : </span>
+                                    <span class="info-span">{{student.gender}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">DOB : </span>
+                                    <span class="info-span">{{student.date_of_birth}}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+                            <h5>Permanent Address</h5>
+                            <p>{{student.parent.permanent_address}}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+                            <h5>Present Address</h5>
+                            <p>{{student.parent.present_address}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

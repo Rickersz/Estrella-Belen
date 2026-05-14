@@ -1,0 +1,145 @@
+{% extends 'Home/base.html' %}
+
+{% block page_title %} Preskool - Teacher Details {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 class="page-title">Teachers Details</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'teacher_list' %}">Teachers</a></li>
+                <li class="breadcrumb-item active">Teachers Details</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="about-info">
+                    <h4>About Me</h4>
+                    <div class="d-flex mt-3">
+                        <img src="{%if teacher.teacher_image %} {{teacher.teacher_image.url}} {% endif %}" class="me-3"
+                            alt="...">
+                        <div>
+                            <ul>
+                                <li>
+                                    <span class="title-span">Full Name : </span>
+                                    <span class="info-span">{{teacher.name}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Department : </span>
+                                    <span class="info-span">{{teacher.department.name|default:'Not Assigned'}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Mobile : </span>
+                                    <span class="info-span">{{teacher.mobile_number}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Email : </span>
+                                    <span class="info-span"><a
+                                            href="https://preschool.dreamguystech.com/cdn-cgi/l/email-protection"
+                                            class="__cf_email__"
+                                            data-cfemail="a3c7c2cad0dae3c4cec2cacf8dc0ccce">[email&#160;protected]</a></span>
+                                </li>
+                                <li>
+                                    <span class="title-span">Gender : </span>
+                                    <span class="info-span">{{teacher.gender}}</span>
+                                </li>
+                                <li>
+                                    <span class="title-span">DOB : </span>
+                                    <span class="info-span">{{teacher.date_of_birth}}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <p>Hello I am Daisy Parks. Lorem Ipsum is simply dummy text of the printing
+                                and typesetting industry, simply dummy text of the printing and
+                                typesetting industry.</p>
+                        </div>
+                    </div>
+                    <div class="row follow-sec">
+                        <div class="col-md-4 mb-3">
+                            <div class="blue-box">
+                                <h3>2850</h3>
+                                <p>Followers</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="blue-box">
+                                <h3>2050</h3>
+                                <p>Following</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="blue-box">
+                                <h3>2950</h3>
+                                <p>Friends</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+                            <h5>Permanent Address</h5>
+                            <p>480, Estern Avenue, Courtage area, New York</p>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+                            <h5>Present Address</h5>
+                            <p>480, Estern Avenue, Courtage area, New York</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2"  style="padding-top: 20px; border-top: 1px solid #ddd;">
+            <div class="col-md-12">
+                <div>
+                    <h4>Assignments</h4>                    
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">Assigned Subjects</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Class</th>
+                                                <th>Subject</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if assignments %}
+                                            {% for assignment in assignments %}
+                                            <tr>
+                                                <td>{{assignment.class_assigned}}</td>
+                                                <td>{{assignment.subject}}</td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% else %}
+                                            <tr>
+                                                <td colspan="2">No assignments found.</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

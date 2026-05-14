@@ -1,0 +1,15 @@
+__pycache__/
+
+# Ignore environment variable files
+.env
+
+# Ignore database files
+*.sqlite3
+
+media/
+
+# ignore static images for development
+static/assets/img/
+
+ongoing-issues.txt
+sql_files/

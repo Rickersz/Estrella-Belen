@@ -1,0 +1,47 @@
+{% extends 'Home/base.html' %}
+
+{% block page_title %} Preskool - Add Assignment {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h3 class="page-title">Add Assignment</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'assignment_list' %}">Assignment</a></li>
+                <li class="breadcrumb-item active">Add Assignment</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="{% url 'add_assignment' %}">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+                    <div class="row">
+                        {% for field in form %}
+                        <div class="col-md-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {% endfor %}
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add Assignment
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
