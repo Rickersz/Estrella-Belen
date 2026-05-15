@@ -160,8 +160,30 @@ def add_student(request):
 @login_required(login_url='login')
 def student_list(request):
     students = Student.objects.all()
-    return render(request, 'student/student-list.html', {'students': students})
+     # 🔎 SEARCH
+    query = request.GET.get('q')
+    if query:
+        students = students.filter(
+            first_name__icontains=query
+        ) | students.filter(
+            last_name__icontains=query
+        ) | students.filter(
+            student_id__icontains=query
+        )
 
+    # 🎯 FILTERS
+    etapa = request.GET.get('etapa')
+    grado = request.GET.get('grado')
+
+    if etapa:
+        students = students.filter(etapa=etapa)
+
+    if grado:
+        students = students.filter(grado=grado)
+
+    return render(request, 'student/student-list.html', {
+        'students': students,
+    })
 
 # =========================
 # STUDENT DETAIL

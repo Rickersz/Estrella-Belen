@@ -10,7 +10,8 @@
                 <li class="breadcrumb-item active">Students</li>
             </ul>
         </div>
-        <div class="col-auto text-end float-right ml-auto">
+
+        <div class="col-auto text-end">
             <a href="{% url 'download_students_csv' %}" class="btn btn-outline-primary me-2">
                 <i class="fas fa-download"></i> Download
             </a>
@@ -21,93 +22,133 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-sm-12">
-        <div class="card card-table">
-            <div class="card-body">
-                <div class="table-responsive">
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <form method="GET" class="row mb-3">
+    <div class="col-md-4">
+        <input type="text" name="q" class="form-control"
+               placeholder="Buscar estudiante...">
+    </div>
 
-                    <table class="table table-hover table-center mb-0 datatable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Grade</th>
-                                <th>DOB</th>
-                                <th>Parent</th>
-                                <th>Phone</th>
-                                <th>Address</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
+    <div class="col-md-3">
+        <select name="etapa" class="form-control">
+            <option value="">Etapa</option>
+            <option value="Preescolar">Preescolar</option>
+            <option value="Primaria">Primaria</option>
+        </select>
+    </div>
 
-                        <tbody>
-                            {% for student in students %}
-                            <tr>
-                                <td>{{ student.student_id }}</td>
+    <div class="col-md-3">
+        <select name="grado" class="form-control">
+            <option value="">Grado</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+        </select>
+    </div>
 
-                                <td>
-                                    <h2 class="table-avatar">
-                                        <a href="{% if student.slug %}{% url 'student_detail' student.slug %}{% endif %}">
-                                            {{ student.first_name }} {{ student.last_name }}
-                                        </a>
-                                    </h2>
-                                </td>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
 
-                                <!-- GRADO REAL -->
-                                <td>
-                                    {{ student.etapa }} / {{ student.grado }} - {{ student.section }}
-                                </td>
+            <table class="table table-hover table-center mb-0 datatable">
 
-                                <td>{{ student.date_of_birth }}</td>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Academic</th>
+                        <th>DOB</th>
+                        <th>Parents</th>
+                        <th>Contacts</th>
+                        <th>Address</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
 
-                                <!-- PADRES -->
-                                <td>
-                                    {{ student.parent.father_name }}<br>
-                                    {{ student.parent.mother_name }}
-                                </td>
+                <tbody>
+                {% for student in students %}
+                    <tr>
 
-                                <!-- TELÉFONO -->
-                                <td>
-                                    {{ student.parent.father_mobile }}
-                                </td>
+                        <!-- ID -->
+                        <td>{{ student.student_id }}</td>
 
-                                <!-- DIRECCIÓN -->
-                                <td>
-                                    {{ student.direccion_completa }}
-                                </td>
+                        <!-- NAME -->
+                        <td>
+                            {% if student.slug %}
+                                <a href="{% url 'student_detail' student.slug %}">
+                                    {{ student.first_name }} {{ student.last_name }}
+                                </a>
+                            {% else %}
+                                {{ student.first_name }} {{ student.last_name }}
+                            {% endif %}
+                        </td>
 
-                                <td class="text-end">
-                                    <div class="actions">
+                        <!-- ACADEMIC INFO -->
+                        <td>
+                            {{ student.etapa }} / {{ student.grado }} - {{ student.section }}
+                        </td>
 
-                                        <a href="{% url 'edit_student' student.slug %}"
-                                           class="btn btn-sm bg-success-light me-2">
-                                            <i class="fas fa-pen"></i>
-                                        </a>
+                        <!-- DOB -->
+                        <td>{{ student.date_of_birth }}</td>
 
-                                        <button type="button"
-                                                class="btn btn-sm bg-danger-light delete-btn"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal"
-                                                data-url="{% url 'delete_student' student.slug %}">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                        <!-- PARENTS -->
+                        <td>
+                            {% if student.parent %}
+                                {{ student.parent.father_name }}<br>
+                                {{ student.parent.mother_name }}
+                            {% else %}
+                                Sin datos
+                            {% endif %}
+                        </td>
 
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
+                        <!-- CONTACTS -->
+                        <td>
+                            {% if student.parent %}
+                                {{ student.parent.father_mobile }}<br>
+                                {{ student.parent.mother_mobile }}
+                            {% else %}
+                                ---
+                            {% endif %}
+                        </td>
 
-                    </table>
+                        <!-- ADDRESS -->
+                        <td>
+                            {{ student.direccion_completa|default:"Sin dirección" }}
+                        </td>
 
-                </div>
-            </div>
+                        <!-- ACTION -->
+                        <td class="text-end">
+                            <div class="actions">
+
+                                <a href="{% url 'edit_student' student.slug %}"
+                                   class="btn btn-sm bg-success-light me-2">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm bg-danger-light delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal"
+                                        data-url="{% url 'delete_student' student.slug %}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+
+                            </div>
+                        </td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+
         </div>
     </div>
 </div>
 
-<!-- MODAL DELETE -->
+<!-- DELETE MODAL -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -147,4 +188,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-{% endblock %}
+{% endblock %}  
