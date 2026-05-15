@@ -90,7 +90,7 @@ def add_student(request):
 
 
         # CREATE STUDENT
-        student = Student.objects.create(
+        student = Student(
             student_id=student_id,
             first_name=first_name,
             last_name=last_name,
@@ -229,14 +229,14 @@ def edit_student(request, slug):
         parent.mother_email = request.POST.get('mother_email')
 
 
-        parent.cedula_padre=request.POST.get('cedula_padre'),
-        parent.fechan_padre=request.POST.get('fechan_padre'),
-        parent.trabaja_padre=request.POST.get('trabaja_padre'),
-        parent.lugar_trabajo_padre=request.POST.get('lugar_trabajo_padre'),
+        parent.cedula_padre=request.POST.get('cedula_padre')
+        parent.fechan_padre=request.POST.get('fechan_padre')
+        parent.trabaja_padre=request.POST.get('trabaja_padre')
+        parent.lugar_trabajo_padre=request.POST.get('lugar_trabajo_padre')
 
-        parent.fechan_madre=request.POST.get('fechan_madre'),
-        parent.trabaja_madre=request.POST.get('trabaja_madre'),
-        parent.lugar_trabajo_madre=request.POST.get('lugar_trabajo_madre'),
+        parent.fechan_madre=request.POST.get('fechan_madre')
+        parent.trabaja_madre=request.POST.get('trabaja_madre')
+        parent.lugar_trabajo_madre=request.POST.get('lugar_trabajo_madre')
 
         parent.save()
 

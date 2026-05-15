@@ -40,7 +40,7 @@ class Student(models.Model):
     etnia = models.CharField(max_length=50, blank=True, null=True)
     pais_extranjero = models.CharField(max_length=50, blank=True, null=True)
     direccion_completa = models.TextField(blank=True, null=True)
-    slug = models.CharField(max_length=100, unique=True, blank=True)
+    slug = models.SlugField(max_length=120, unique=True, blank=True, null=True)
 
     # ACADEMICO
     etapa = models.CharField(max_length=20, null=True, blank=True)
@@ -89,11 +89,14 @@ class Student(models.Model):
     student_image = models.ImageField(upload_to='students/', null=True, blank=True)
     
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            base = f"{self.first_name.lower()}-{self.last_name.lower()}-{self.student_id}"
-            self.slug = f"{base}-{uuid.uuid4().hex[:6]}"
-        super().save(*args, **kwargs)
+def save(self, *args, **kwargs):
+
+    if not self.slug:
+        base = f"{self.first_name}-{self.last_name}-{self.student_id}"
+        base = base.lower().replace(" ", "-")
+        self.slug = f"{base}-{uuid.uuid4().hex[:6]}"
+
+    super().save(*args, **kwargs)
     
 class Enrollment(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
