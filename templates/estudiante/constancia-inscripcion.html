@@ -1,0 +1,347 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Constancia de Inscripción - {{ student.first_name }} {{ student.last_name }}</title>
+  <style>
+    /* ===== RESET ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background: #e8e8e8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      min-height: 100vh;
+    }
+
+    /* ===== BOTONES DE ACCIÓN (no se imprimen) ===== */
+    .acciones-impresion {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      width: 210mm;
+    }
+
+    .btn-imprimir {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: linear-gradient(135deg, #7DC7F6, #8BF4ED);
+      color: #0b1a2e;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-imprimir:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(125,199,246,0.4);
+    }
+
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: rgba(125,199,246,0.1);
+      color: #7DC7F6;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid rgba(125,199,246,0.3);
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-volver:hover {
+      background: rgba(125,199,246,0.18);
+      color: #7DC7F6;
+      text-decoration: none;
+    }
+
+    /* ===== HOJA ===== */
+    .hoja {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      padding: 18mm 20mm 18mm 20mm;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ===== ENCABEZADO ===== */
+    .encabezado {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 8mm;
+      padding-bottom: 6mm;
+      border-bottom: 2px solid #333;
+    }
+
+    .logo-inst {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .datos-inst {
+      flex: 1;
+    }
+
+    .datos-inst p {
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #222;
+      font-style: italic;
+    }
+
+    .datos-inst p strong {
+      font-style: normal;
+      font-size: 11pt;
+    }
+
+    /* ===== TÍTULO ===== */
+    .titulo-constancia {
+      text-align: center;
+      font-size: 22pt;
+      font-weight: bold;
+      font-style: italic;
+      color: #1a1a1a;
+      margin: 8mm 0 10mm;
+      letter-spacing: 1px;
+    }
+
+    /* ===== CUERPO ===== */
+    .cuerpo {
+      flex: 1;
+      font-size: 12pt;
+      line-height: 1.9;
+      color: #1a1a1a;
+      text-align: justify;
+    }
+
+    .cuerpo p {
+      margin-bottom: 6mm;
+      text-indent: 15mm;
+    }
+
+    .cuerpo p.sin-sangria {
+      text-indent: 0;
+    }
+
+    /* Datos resaltados */
+    .dato-nombre {
+      font-weight: bold;
+      text-transform: uppercase;
+      text-decoration: underline;
+    }
+
+    .dato-grado {
+      font-weight: bold;
+      text-decoration: underline;
+      font-style: italic;
+    }
+
+    .dato-monto {
+      font-weight: bold;
+    }
+
+    /* ===== FIRMA ===== */
+    .firma-area {
+      margin-top: 12mm;
+      text-align: center;
+    }
+
+    .firma-linea {
+      width: 60mm;
+      border-top: 1px solid #333;
+      margin: 0 auto 4px;
+    }
+
+    .firma-texto {
+      font-size: 10pt;
+      color: #333;
+    }
+
+    /* ===== PIE DE PÁGINA (segunda constancia) ===== */
+    .separador-pie {
+      border-top: 2px dashed #999;
+      margin: 10mm 0 6mm;
+    }
+
+    .pie-constancia {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding-top: 4mm;
+    }
+
+    .pie-constancia .logo-inst-pie {
+      width: 55px;
+      height: 55px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .pie-constancia .datos-inst-pie p {
+      font-size: 8pt;
+      line-height: 1.5;
+      color: #444;
+      font-style: italic;
+    }
+
+    /* ===== IMPRESIÓN ===== */
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .acciones-impresion {
+        display: none !important;
+      }
+
+      .hoja {
+        width: 100%;
+        min-height: 100vh;
+        box-shadow: none;
+        padding: 15mm 20mm;
+      }
+
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Botones de acción -->
+  <div class="acciones-impresion">
+    <button class="btn-imprimir" onclick="window.print()">
+      <i class="fas fa-print"></i> Imprimir Constancia
+    </button>
+    <a href="{% url 'student_list' %}" class="btn-volver">
+      <i class="fas fa-arrow-left"></i> Volver a Estudiantes
+    </a>
+    <a href="{% url 'student_detail' student.slug %}" class="btn-volver">
+      <i class="fas fa-user"></i> Ver Expediente
+    </a>
+  </div>
+
+  <!-- HOJA IMPRIMIBLE -->
+  <div class="hoja">
+
+    <!-- Encabezado institucional -->
+    <div class="encabezado">
+      <img src="{% static 'assets/img/logo.png' %}" alt="Logo" class="logo-inst">
+      <div class="datos-inst">
+        <p><strong>Unidad Educativa "BELÉN"</strong></p>
+        <p>Ministerio del Poder Popular Para La Educación.</p>
+        <p>Código DEA: PD03761105</p>
+        <p>República Bolivariana de Venezuela.</p>
+        <p>RIF: V-02855662-0.</p>
+      </div>
+    </div>
+
+    <!-- Título -->
+    <div class="titulo-constancia">Constancia de Inscripción.</div>
+
+    <!-- Cuerpo del documento -->
+    <div class="cuerpo">
+
+      <p>
+        Quien suscribe,
+        <span class="dato-nombre">{{ parent.father_name|default:"el representante" }}</span>,
+        titular de la cédula de Identidad
+        N° <strong>{{ parent.cedula_padre|default:"___________" }}</strong>,
+        hace constar por medio de la presente que el (la) niño (a):
+        <span class="dato-nombre">{{ student.last_name }} {{ student.first_name }}</span>
+        Titular de la Cédula Escolar
+        N° <strong>{{ student.cedula|default:"___________" }}</strong>
+        nacido (a) en
+        <strong>{{ student.estado_natal|default:"___________" }}</strong>
+        el día
+        <strong>
+          {% if student.date_of_birth %}
+            {{ student.date_of_birth|date:"j" }} de {{ student.date_of_birth|date:"F" }} del año {{ student.date_of_birth|date:"Y" }}
+          {% else %}
+            ___________
+          {% endif %}
+        </strong>
+        fue inscrito (a) en esta institución para cursar
+        <span class="dato-grado">"{{ student.grado|default:"___________" }}"</span>
+        de Educación
+        {% if student.etapa == "Preescolar" %}Preescolar{% else %}Primaria{% endif %}
+        durante el año Escolar
+        <strong>{{ enrollment.academic_year|default:"2025-2026" }}</strong>.
+      </p>
+
+      <p>
+        Cancelando un monto de
+        <span class="dato-monto">
+          {% if enrollment and enrollment.monto_inscripcion %}
+            {{ enrollment.monto_inscripcion|floatformat:2 }}
+          {% else %}
+            ___________
+          {% endif %}
+        </span>
+        Bolívares.
+      </p>
+
+      <p class="sin-sangria">
+        En Bella Vista a los
+        <strong>{% now "j" %}</strong>
+        días del mes de
+        <strong>{% now "F" %}</strong>
+        del año
+        <strong>{% now "Y" %}</strong>.
+      </p>
+
+    </div>
+
+    <!-- Área de firma -->
+    <div class="firma-area">
+      <div class="firma-linea"></div>
+      <p class="firma-texto">Director(a) / Secretaria</p>
+      <p class="firma-texto">Unidad Educativa "Belén"</p>
+    </div>
+
+    <!-- Separador y pie (copia) -->
+    <div class="separador-pie"></div>
+
+    <div class="pie-constancia">
+      <img src="{% static 'assets/img/logo.png' %}" alt="Logo" class="logo-inst-pie">
+      <div class="datos-inst-pie">
+        <p><strong>Unidad Educativa "BELÉN"</strong></p>
+        <p>Ministerio del Poder Popular Para La Educación.</p>
+        <p>Código DEA: PD03761105</p>
+        <p>República Bolivariana de Venezuela.</p>
+        <p>RIF: V-02855662-0.</p>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

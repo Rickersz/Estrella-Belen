@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Panel de Control - Estrella de Belén{% endblock %}
+{% block titulo_pagina %}Panel de Control{% endblock %}
+{% block subtitulo_pagina %}Bienvenido al sistema escolar{% endblock %}
+
+{% block contenido %}
+
+<!-- Tarjetas de estadísticas -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6">
+        <div class="s-stat-card">
+            <div class="s-stat-icono">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div>
+                <div class="s-stat-valor">{{ students.count|default:"0" }}</div>
+                <div class="s-stat-label">Estudiantes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="s-stat-card">
+            <div class="s-stat-icono turquesa">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div>
+                <div class="s-stat-valor">{{ teachers.count|default:"0" }}</div>
+                <div class="s-stat-label">Profesores</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="s-stat-card">
+            <div class="s-stat-icono dorado">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div>
+                <div class="s-stat-valor">{{ access_logs.count|default:"0" }}</div>
+                <div class="s-stat-label">Accesos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-sm-6">
+        <div class="s-stat-card">
+            <div class="s-stat-icono verde">
+                <i class="fas fa-book"></i>
+            </div>
+            <div>
+                <div class="s-stat-valor">{{ subjects.count|default:"0" }}</div>
+                <div class="s-stat-label">Materias</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accesos rápidos -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="s-card">
+            <div class="s-card-header">
+                <h5 class="s-card-titulo"><i class="fas fa-bolt me-2" style="color:var(--s-dorado)"></i>Accesos Rápidos</h5>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'add_student' %}" class="s-btn s-btn-primario">
+                    <i class="fas fa-user-plus"></i> Inscribir Estudiante
+                </a>
+                <a href="{% url 'student_list' %}" class="s-btn s-btn-secundario">
+                    <i class="fas fa-list"></i> Ver Estudiantes
+                </a>
+                <a href="{% url 'add_teacher' %}" class="s-btn s-btn-secundario">
+                    <i class="fas fa-chalkboard-teacher"></i> Agregar Profesor
+                </a>
+                <a href="{% url 'add_subject' %}" class="s-btn s-btn-secundario">
+                    <i class="fas fa-book"></i> Agregar Materia
+                </a>
+                <a href="{% url 'access_log' %}" class="s-btn s-btn-secundario">
+                    <i class="fas fa-file-alt"></i> Ver Bitácora
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de estudiantes recientes -->
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="s-card">
+            <div class="s-card-header">
+                <h5 class="s-card-titulo"><i class="fas fa-user-graduate me-2" style="color:var(--s-azul)"></i>Estudiantes Recientes</h5>
+                <a href="{% url 'student_list' %}" class="s-btn s-btn-secundario" style="padding:6px 12px;font-size:0.78rem">
+                    Ver todos <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="s-tabla-wrap">
+                <table class="s-tabla">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Etapa</th>
+                            <th>Grado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students|slice:":8" %}
+                        <tr>
+                            <td><span class="s-badge s-badge-azul">{{ student.student_id }}</span></td>
+                            <td>{{ student.first_name }} {{ student.last_name }}</td>
+                            <td>{{ student.etapa|default:"-" }}</td>
+                            <td>{{ student.grado|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'edit_student' student.slug %}" class="s-btn s-btn-exito" style="padding:4px 10px;font-size:0.75rem">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:var(--s-suave);padding:30px">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                No hay estudiantes registrados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info del sistema -->
+    <div class="col-lg-4">
+        <div class="s-card">
+            <div class="s-card-header">
+                <h5 class="s-card-titulo"><i class="fas fa-info-circle me-2" style="color:var(--s-turquesa)"></i>Sistema</h5>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(125,199,246,0.05);border-radius:10px;border:1px solid var(--s-borde)">
+                    <span style="color:var(--s-suave);font-size:0.82rem">Versión</span>
+                    <span class="s-badge s-badge-azul">1.0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(125,199,246,0.05);border-radius:10px;border:1px solid var(--s-borde)">
+                    <span style="color:var(--s-suave);font-size:0.82rem">Estado</span>
+                    <span class="s-badge s-badge-verde">Activo</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(125,199,246,0.05);border-radius:10px;border:1px solid var(--s-borde)">
+                    <span style="color:var(--s-suave);font-size:0.82rem">Año Escolar</span>
+                    <span class="s-badge s-badge-dorado">2025-2026</span>
+                </div>
+                {% if user.is_admin %}
+                <a href="{% url 'user_management' %}" class="s-btn s-btn-primario" style="justify-content:center;margin-top:4px">
+                    <i class="fas fa-users-cog"></i> Gestión de Usuarios
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

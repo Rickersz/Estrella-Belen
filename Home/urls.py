@@ -19,16 +19,18 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('school.urls')),
-    path('student/', include('student.urls')),
-    path('authentication/', include('home_auth.urls')),
-    path('subject/', include('subject.urls')),
-    path('teacher/', include('teacher.urls')),
-    path('department/', include('department.urls')),
+    path('', include('escuela.urls')),
+    path('estudiante/', include('estudiante.urls')),
+    path('autenticacion/', include('autenticacion.urls')),
+    path('materia/', include('materia.urls')),
+    path('profesor/', include('profesor.urls')),
+    path('reportes/', include('reportes.urls')),
+    path('bitacora/', include('bitacora.urls')),
 ]
 
 from django.conf import settings
 from django.conf.urls.static import static
 
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,149 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block page_title %}Estrella de Belén - Iniciar Sesión{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'assets/css/estilo.css' %}">
+{% endblock %}
+
+{% block body %}
+<!-- Fondo animado -->
+<div class="login-bg">
+  <div class="grid-lines"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+</div>
+
+<div class="login-page login-page-wrapper">
+  <div class="login-card">
+
+    <!-- Panel izquierdo: logo grande sin fondo de color -->
+    <div class="login-panel-left">
+      <div class="login-stars">
+        <i class="fas fa-star login-star"></i>
+        <i class="fas fa-star login-star"></i>
+        <i class="fas fa-star login-star"></i>
+        <i class="fas fa-star login-star"></i>
+        <i class="fas fa-star login-star"></i>
+        <i class="fas fa-star login-star"></i>
+      </div>
+      <div class="login-logo-container">
+        <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belén">
+        <div class="login-logo-title">Estrella de Belén</div>
+        <div class="login-logo-subtitle">Sistema Escolar</div>
+        <div class="login-logo-divider"></div>
+      </div>
+    </div>
+
+    <!-- Panel derecho: formulario -->
+    <div class="login-panel-right">
+      <div class="login-form-wrap">
+        <h1 class="login-form-title">Bienvenido</h1>
+        <p class="login-form-subtitle">Ingresa tus credenciales para continuar</p>
+
+        {% if error %}
+        <div class="login-alert">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="{% url 'iniciar_sesion' %}" method="post" id="loginForm">
+          {% csrf_token %}
+
+          <div class="login-field-group">
+            <label class="login-field-label" for="email">Correo electrónico</label>
+            <div class="login-field-wrap">
+              <input class="login-field-input" type="email" id="email" name="email"
+                     placeholder="ejemplo@correo.com" autocomplete="email" required>
+              <i class="fas fa-envelope login-field-icon"></i>
+            </div>
+          </div>
+
+          <div class="login-field-group">
+            <label class="login-field-label" for="password">Contraseña</label>
+            <div class="login-field-wrap">
+              <input class="login-field-input" type="password" id="password" name="password"
+                     placeholder="••••••••" autocomplete="current-password" required>
+              <i class="fas fa-lock login-field-icon"></i>
+              <button type="button" class="login-toggle-pwd" onclick="togglePassword()" title="Mostrar/ocultar">
+                <i class="fas fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Google reCAPTCHA v2 -->
+          <div class="login-field-group">
+            <div class="login-field-wrap">
+              <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
+            </div>
+          </div>
+
+          {% if cuenta_bloqueada %}
+          <div class="login-alert" style="border-left-color:#F7CF0D;background:rgba(247,207,13,0.08);color:#F7CF0D">
+            <i class="fas fa-lock"></i>
+            Cuenta bloqueada. Contacta al administrador para desbloquearla.
+          </div>
+          {% endif %}
+
+          <button type="submit" class="btn-login" id="loginBtn">
+            <span><i class="fas fa-sign-in-alt me-2"></i>Ingresar</span>
+          </button>
+        </form>
+
+        <div class="login-links">
+          <a href="{% url 'recuperar_contrasena' %}" class="login-forgot-link">
+            <i class="fas fa-key me-1"></i>¿Olvidaste tu contraseña?
+          </a>
+          <div class="login-divider-or">o</div>
+          <p class="login-register-link">
+            ¿No tienes cuenta? <a href="{% url 'registrarse' %}">Regístrate aquí</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+  function togglePassword() {
+    const input = document.getElementById('password');
+    const icon  = document.getElementById('eyeIcon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', function(e) {
+    const btn    = this;
+    const circle = document.createElement('span');
+    const rect   = btn.getBoundingClientRect();
+    const size   = Math.max(rect.width, rect.height);
+    circle.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px;`;
+    circle.classList.add('ripple');
+    btn.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', function() {
+    const btn = document.getElementById('loginBtn');
+    btn.innerHTML = '<span><i class="fas fa-spinner fa-spin me-2"></i>Verificando...</span>';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

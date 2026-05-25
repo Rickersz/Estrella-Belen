@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load extra_filters %}
+
+{% block titulo %}Estudiantes - Estrella de Belén{% endblock %}
+{% block titulo_pagina %}Estudiantes{% endblock %}
+{% block subtitulo_pagina %}Listado de estudiantes inscritos{% endblock %}
+
+{% block contenido %}
+
+<!-- Acciones superiores -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <form method="GET" class="d-flex gap-2 flex-wrap">
+    <input type="text" name="q" value="{{ request.GET.q }}" class="s-form-control"
+           placeholder="Buscar por nombre o ID..." style="width:220px">
+    <select name="etapa" class="s-form-control" style="width:150px">
+      <option value="">Todas las etapas</option>
+      <option value="Preescolar" {% if request.GET.etapa == 'Preescolar' %}selected{% endif %}>Preescolar</option>
+      <option value="Primaria"   {% if request.GET.etapa == 'Primaria'   %}selected{% endif %}>Primaria</option>
+    </select>
+    <select name="grado" class="s-form-control" style="width:130px">
+      <option value="">Todos los grados</option>
+      {% for g in "1er,2do,3er,1ro,2do,3ro,4to,5to,6to"|split:"," %}
+      <option value="{{ g }}" {% if request.GET.grado == g %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="s-btn s-btn-primario">
+      <i class="fas fa-search"></i> Filtrar
+    </button>
+    {% if request.GET.q or request.GET.etapa or request.GET.grado %}
+    <a href="{% url 'student_list' %}" class="s-btn s-btn-secundario">
+      <i class="fas fa-times"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
+
+  <div class="d-flex gap-2">
+    <a href="{% url 'download_students_csv' %}" class="s-btn s-btn-secundario">
+      <i class="fas fa-file-csv"></i> Exportar CSV
+    </a>
+    <a href="{% url 'add_student' %}" class="s-btn s-btn-primario">
+      <i class="fas fa-user-plus"></i> Inscribir Estudiante
+    </a>
+  </div>
+</div>
+
+<!-- Tabla -->
+<div class="s-card">
+  <div class="s-card-header">
+    <h5 class="s-card-titulo">
+      <i class="fas fa-user-graduate me-2" style="color:var(--s-azul)"></i>
+      Lista de Estudiantes
+      <span class="s-badge s-badge-azul ms-2">{{ students|length }}</span>
+    </h5>
+  </div>
+
+  <div class="s-tabla-wrap">
+    <table class="s-tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Etapa / Grado</th>
+          <th>Fecha Nac.</th>
+          <th>Representante</th>
+          <th>Teléfono</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td><span class="s-badge s-badge-azul">{{ student.student_id }}</span></td>
+
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              {% if student.student_image %}
+              <img src="{{ student.student_image.url }}" alt="foto"
+                   style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--s-borde)">
+              {% else %}
+              <div style="width:34px;height:34px;border-radius:50%;background:rgba(125,199,246,0.1);display:flex;align-items:center;justify-content:center;color:var(--s-azul);font-size:0.9rem;border:2px solid var(--s-borde)">
+                <i class="fas fa-user"></i>
+              </div>
+              {% endif %}
+              <div>
+                <div style="color:var(--s-texto);font-weight:600;font-size:0.88rem">
+                  {{ student.first_name }} {{ student.last_name }}
+                </div>
+                <div style="color:var(--s-suave);font-size:0.75rem">
+                  {{ student.gender|default:"-" }}
+                </div>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <span class="s-badge s-badge-verde">{{ student.etapa|default:"-" }}</span>
+            <span style="color:var(--s-suave);font-size:0.82rem;margin-left:4px">
+              {{ student.grado|default:"-" }} - {{ student.section|default:"-" }}
+            </span>
+          </td>
+
+          <td style="color:var(--s-suave);font-size:0.85rem">
+            {{ student.date_of_birth|default:"-" }}
+          </td>
+
+          <td style="font-size:0.85rem">
+            {% if student.parent %}
+            <div style="color:var(--s-texto)">{{ student.parent.father_name }}</div>
+            <div style="color:var(--s-suave);font-size:0.78rem">{{ student.parent.mother_name }}</div>
+            {% else %}
+            <span style="color:var(--s-suave)">Sin representante</span>
+            {% endif %}
+          </td>
+
+          <td style="color:var(--s-suave);font-size:0.85rem">
+            {% if student.parent %}{{ student.parent.father_mobile|default:"-" }}{% else %}-{% endif %}
+          </td>
+
+          <td class="text-end">
+            <div class="d-flex gap-1 justify-content-end">
+              <!-- Constancia -->
+              <a href="{% url 'constancia_inscripcion' student.slug %}"
+                 class="s-btn s-btn-secundario" style="padding:5px 10px;font-size:0.78rem"
+                 title="Imprimir Constancia">
+                <i class="fas fa-file-alt"></i>
+              </a>
+              <!-- Editar -->
+              <a href="{% url 'edit_student' student.slug %}"
+                 class="s-btn s-btn-exito" style="padding:5px 10px;font-size:0.78rem"
+                 title="Editar">
+                <i class="fas fa-pen"></i>
+              </a>
+              <!-- Eliminar -->
+              <button type="button"
+                      class="s-btn s-btn-peligro delete-btn"
+                      style="padding:5px 10px;font-size:0.78rem"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalEliminar"
+                      data-url="{% url 'delete_student' student.slug %}"
+                      data-nombre="{{ student.first_name }} {{ student.last_name }}"
+                      title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align:center;padding:40px;color:var(--s-suave)">
+            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+            No se encontraron estudiantes
+            {% if request.GET.q or request.GET.etapa %}
+            con los filtros aplicados.
+            <a href="{% url 'student_list' %}" style="color:var(--s-azul)">Ver todos</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:var(--s-card);border:1px solid var(--s-borde);border-radius:16px">
+      <div class="modal-header" style="border-bottom:1px solid var(--s-borde)">
+        <h5 class="modal-title" style="color:#fca5a5">
+          <i class="fas fa-exclamation-triangle me-2" style="color:#ef4444"></i>
+          Confirmar Eliminación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="color:var(--s-texto)">
+        ¿Estás seguro de que deseas eliminar al estudiante
+        <strong id="nombreEstudiante" style="color:#fca5a5"></strong>?
+        <p style="color:var(--s-suave);font-size:0.85rem;margin-top:8px">
+          Esta acción no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--s-borde)">
+        <button type="button" class="s-btn s-btn-secundario" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <form id="formEliminar" method="post">
+          {% csrf_token %}
+          <button type="submit" class="s-btn s-btn-peligro">
+            <i class="fas fa-trash"></i> Eliminar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.getElementById('formEliminar').action = this.dataset.url;
+      document.getElementById('nombreEstudiante').textContent = this.dataset.nombre;
+    });
+  });
+});
+</script>
+
+{% endblock %}

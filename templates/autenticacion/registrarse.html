@@ -1,0 +1,64 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block page_title %} Estrella de Belén - Registrarse {% endblock %}
+
+{% block body %}
+<div class="main-wrapper login-body">
+    <div class="login-wrapper">
+        <div class="container">
+            <div class="loginbox">
+                <div class="login-left">
+                    <img class="img-fluid" src="{% static 'assets/img/logo.png' %}" alt="Logo">
+                </div>
+                <div class="login-right">
+                    <div class="login-right-wrap">
+                        <h1>Registrate</h1>
+                        <p class="account-subtitle">Accede a nuestro panel de control</p>
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            <span>{{ error }}</span>
+                        </div>
+                        {% endif %}
+
+                        <form action="{% url 'registrarse' %}" method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <input class="form-control" type="text" name="first_name" placeholder="Nombre"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <input class="form-control" type="text" name="last_name" placeholder="Apellido"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <input class="form-control" type="email" name="email" placeholder="Correo" required>
+                            </div>
+                            <div class="form-group">
+                                <input class="form-control" type="password" name="password" placeholder="Contraseña"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <input class="form-control" type="password" name="confirm_password"
+                                    placeholder="Confirmar Contraseña" required>
+                            </div>
+                            <div class="form-group mb-0">
+                                <button class="btn btn-primary btn-block" type="submit">Registrate</button>
+                            </div>
+                        </form>
+
+                        <div class="login-or">
+                            <span class="or-line"></span>
+                            <span class="span-or">o</span>
+                        </div>
+
+                        <div class="text-center dont-have">¿Ya tienes una cuenta? <a
+                                href="{% url 'iniciar_sesion' %}"> Inicia sesión </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Bitácora de Accesos{% endblock %}
+{% block titulo_pagina %}Bitácora de Accesos{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5>Registros de Acceso</h5></div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead>
+                <tr><th>Fecha</th><th>Usuario/Email</th><th>IP</th><th>Acción</th><th>Path</th></tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.created_at }}</td>
+                    <td>{{ log.user.email if log.user else log.email }}</td>
+                    <td>{{ log.ip_address }}</td>
+                    <td>{{ log.action }}</td>
+                    <td>{{ log.path }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">No hay registros</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

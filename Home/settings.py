@@ -19,6 +19,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+# reCAPTCHA keys (use real keys in production; these defaults are Google's test keys)
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -26,9 +30,9 @@ load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY','django-insecure-dev-only-123456789')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
 
 
 # Application definition
@@ -40,12 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'school',
-    'student',
-    'home_auth',
-    'subject',
-    'teacher',
-    'department',
+    'escuela',
+    'estudiante',
+    'autenticacion',
+    'materia',
+    'profesor',
+    'reportes',
+    'bitacora',
 ]
 
 MIDDLEWARE = [
@@ -72,7 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'school.context_processors.dashboards',   # custom context processor to provide dashboards based on user role
+                'escuela.context_processors.dashboards',   # custom context processor to provide dashboards based on user role
             ],
         },
     },
@@ -126,10 +131,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (Uploaded by users)
 MEDIA_URL = '/media/'
@@ -137,16 +143,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # custom user model
-AUTH_USER_MODEL = 'home_auth.CustomUser'        #  (app_label.ModelName) tells Django to use this model instead of the default User model
-# AUTHENTICATION_BACKENDS = [
-#     'django.contrib.auth.backends.ModelBackend',  # default backend   
-# 'home_auth.backends.EmailBackend',  # custom backend to authenticate using email
-# ]
+AUTH_USER_MODEL = 'autenticacion.CustomUser'        # (app_label.ModelName) tells Django to use this model instead of the default User model
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # default backend   
+    'autenticacion.backends.EmailBackend',  # custom backend to authenticate using email
+]
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'     # for development purpose only
-
-USE_TZ = True   # enable timezone support
-TIME_ZONE = 'Asia/Kathmandu'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'    # default type for primary keys in models

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block page_title %} Estrella de Belén - Profesores {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h3 class="page-title">Profesores</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="inicio.html">Inicio</a></li>
+                <li class="breadcrumb-item active">Profesores</li>
+            </ul>
+        </div>
+        <div class="col-auto text-end float-right ml-auto">
+            <a href="#" class="btn btn-outline-primary me-2"><i class="fas fa-download"></i>
+                Descargar</a>
+            <a href="{% url 'add_teacher' %}" class="btn btn-primary"><i class="fas fa-plus"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card card-table">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-center mb-0 datatable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Clase</th>
+                                    <th>Género</th>
+                                    <th>Materia</th>
+                                    <th>Sección</th>
+                                    <th>Teléfono</th>
+                                    <th>Dirección</th>
+                                    <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for teacher in teachers %}
+                            <tr>
+                                <td>{{teacher.teacher_id}}</td>
+                                <td>
+                                    <h2 class="table-avatar">
+                                        <a href="{% url 'teacher_detail' teacher.teacher_id %}"
+                                            class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle"
+                                                src="{%if teacher.teacher_image %} {{teacher.teacher_image.url}} {% endif %}"
+                                                alt="Teacher Image"></a>
+                                        <a href="{% url 'teacher_detail' teacher.teacher_id %}">{{ teacher.name}}</a>
+                                    </h2>
+                                </td>
+                                    <td>Imparte clases</td>
+                                <td>{{ teacher.gender }}</td>
+                                    <td>Matemáticas</td>
+                                <td>A</td>
+                                <td>{{ teacher.mobile_number }}</td>
+                                <td>{{ teacher.address }}</td>
+                                <td class="text-end">
+                                    <div class="actions">
+                                        <a href="{% url 'edit_teacher' teacher.teacher_id %}"
+                                            class="btn btn-sm bg-success-light me-2">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'delete_teacher' teacher.teacher_id %}"
+                                            style="display: inline;">
+                                            {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm bg-danger-light"
+                                                    onclick="return confirm('¿Estás seguro de eliminar este profesor?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

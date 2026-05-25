@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+
+{% block page_title %} Estrella de belén - Inscripción {% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h3 class="page-title">Inscripción</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Estudiantes</a></li>
+                <li class="breadcrumb-item active">Inscripción</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- ===================== ESTUDIANTE ===================== -->
+                    <div class="row">
+
+                        <div class="col-12">
+                            <h5 class="form-title"><span>Datos del Estudiante</span></h5>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Nombres</label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Apellidos</label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Nacionalidad</label>
+                                <input type="text" class="form-control" name="nacionalidad" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Estado Natal</label>
+                                <input type="text" class="form-control" name="estado_natal" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Cédula Escolar</label>
+                                <input type="text" class="form-control" name="student_id" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="tiene_cedula" name="tiene_cedula">
+                                    ¿Tiene cédula de identidad?
+                                </label>
+                                <input type="text" class="form-control mt-2" name="cedula" id="cedula_box" style="display:none;">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Edad</label>
+                                <input type="text" class="form-control" name="edad" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Etnía</label>
+                                <input type="text" class="form-control" name="etnia" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Indicar país en caso de ser extranjero</label>
+                                <input type="text" class="form-control" name="pais_extranjero" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Dirección Completa</label>
+                                <input type="text" class="form-control" name="direccion_completa" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Etapa</label>
+                                <select class="form-control" id="etapa" name="etapa" required>
+                                    <option value="">Seleccionar Etapa</option>
+                                    <option value="Primaria">Primaria</option>
+                                    <option value="Preescolar">Preescolar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Grado / Nivel</label>
+                                <select name="grado" id="grado" class="form-control" required>
+                                    <option value="">Selecciona primero la etapa</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Sección</label>
+                                <input type="text" class="form-control" name="section" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Clase</label>
+                                <input type="text" class="form-control" name="student_class" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Género</label>
+                                <select class="form-control" name="gender" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="Female">Femenino</option>
+                                    <option value="Male">Masculino</option>
+                                    <option value="Others">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Fecha de nacimiento</label>
+                                <input type="date" class="form-control" name="date_of_birth" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Fecha de ingreso</label>
+                                <input type="date" class="form-control" name="joining_date" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Número de admisión</label>
+                                <input type="text" class="form-control" name="admission_number">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Imagen del estudiante</label>
+                                <input type="file" class="form-control" name="student_image">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ===================== TALLAS ===================== -->
+                    <label>Tallas:</label>
+
+                    <div class="row">
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Pantalón</label>
+                                <input type="text" class="form-control" name="pantalon" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Camisa</label>
+                                <input type="text" class="form-control" name="camisa" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Calzado</label>
+                                <input type="text" class="form-control" name="calzado" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Peso</label>
+                                <input type="text" class="form-control" name="peso" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Estatura(talla)</label>
+                                <input type="text" class="form-control" name="estatura" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Medio que utiliza para llegar a la institución</label>
+                                <input type="text" class="form-control" name="transporte" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Vive con los padres</label>
+                                <select class="form-control" name="vive_con_padres" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Huerfáno de padres</label>
+                                <select class="form-control" name="huerfano" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ===================== SALUD ===================== -->
+                    <div class="row">
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Posee Discapacidad</label>
+                                <select class="form-control" name="discapacidad" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Especifique si existe otra condición</label>
+                                <input type="text" class="form-control" name="condicion" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Cual área de atención o condición</label>
+                                <input type="text" class="form-control" name="area_condicion" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Especifique el tipo de discapacidad</label>
+                                <input type="text" class="form-control" name="tipo_discapacidad" required>
+                            </div>
+                        </div>
+                                            <div class="col-12 col-sm-6">
+                        <div class="form-group">
+                            <label>Posee carnet de discapacidad</label>
+                            <select class="form-control" name="carnet_discapacidad" required>
+                                <option value="">Seleccionar</option>
+                                <option value="si">Si</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group">
+                            <label>Presenta informe médico</label>
+                            <select class="form-control" name="informe_medico" required>
+                                <option value="">Seleccionar</option>
+                                <option value="si">Si</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group">
+                            <label>Recibe tratamiento</label>
+                            <select class="form-control" name="recibe_tratamiento" required>
+                                <option value="">Seleccionar</option>
+                                <option value="si">Si</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group">
+                            <label>Cuál</label>
+                            <input type="text" class="form-control" name="cual_tratamiento" required>
+                        </div>
+                    </div>
+
+
+                    </div>
+
+                    <!-- ===================== ESCOLARIDAD ===================== -->
+                    <label>Escolaridad del estudiante:</label>
+
+                    <div class="row">
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Plantel de procedencia o donde curso el grupo/grado/año anterior</label>
+                                <input type="text" class="form-control" name="plantel_anterior" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Repitiente</label>
+                                <select class="form-control" name="repitiente" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Asiste o es atendido por aula integrada</label>
+                                <input type="text" class="form-control" name="aula_integrada" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Esta cargado en el SGE</label>
+                                <select class="form-control" name="cargado_sge" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Observaciones</label>
+                                <input type="text" class="form-control" name="observaciones" required>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ===================== PADRES ===================== -->
+                    <div class="row mt-4">
+
+                        <div class="col-12">
+                            <h5 class="form-title"><span>Datos de los Padres</span></h5>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>C.I Del padre</label>
+                                <input type="text" class="form-control" name="cedula_padre">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Nombres y apellidos completos del Padre</label>
+                                <input type="text" class="form-control" name="father_name">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Fecha de nacimiento</label>
+                                <input type="date" class="form-control" name="fechan_padre" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Trabaja</label>
+                                <select class="form-control" name="trabaja_padre" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Lugar donde trabaja</label>
+                                <input type="text" class="form-control" name="lugar_trabajo_padre">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Teléfono del Padre</label>
+                                <input type="text" class="form-control" name="father_mobile">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Email del Padre</label>
+                                <input type="email" class="form-control" name="father_email">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Nombre de la Madre</label>
+                                <input type="text" class="form-control" name="mother_name">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Teléfono de la Madre</label>
+                                <input type="text" class="form-control" name="mother_mobile">
+                            </div>
+                        </div>
+
+                         
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Fecha de nacimiento</label>
+                                <input type="date" class="form-control" name="fechan_madre" required>
+                            </div>
+                        </div>
+
+                            <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Trabaja</label>
+                                    <select class="form-control" name="trabaja_madre" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="si">Si</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>    
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Lugar donde trabaja</label>
+                                <input type="text" class="form-control" name="lugar_trabajo_madre">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Email de la Madre</label>
+                                <input type="email" class="form-control" name="mother_email">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- MONTO DE INSCRIPCIÓN -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="form-title"><span>Pago de Inscripción</span></h5>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Monto Cancelado (Bs.)</label>
+                                <input type="number" step="0.01" min="0" class="form-control"
+                                       name="monto_inscripcion" placeholder="Ej: 15730.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN -->
+                    <div class="text-end mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Guardar e Imprimir Constancia
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

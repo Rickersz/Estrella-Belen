@@ -1,0 +1,171 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block page_title %}Verificación de Seguridad - Estrella de Belén{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'assets/css/estilo.css' %}">
+{% endblock %}
+
+{% block body %}
+<div class="login-bg">
+  <div class="grid-lines"></div>
+  <div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div>
+  <div class="particle"></div><div class="particle"></div>
+</div>
+
+<div class="login-page login-page-wrapper">
+  <div class="login-card" style="max-width:480px;min-height:auto">
+
+    <div class="login-panel-right" style="flex:1;padding:50px 45px">
+      <div class="login-form-wrap" style="max-width:100%">
+
+        <!-- Icono y título -->
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="width:70px;height:70px;border-radius:50%;background:rgba(125,199,246,0.1);border:2px solid rgba(125,199,246,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;color:#7DC7F6">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h1 class="login-form-title" style="font-size:1.5rem">Verificación en 2 pasos</h1>
+          <p class="login-form-subtitle">
+            Enviamos un código de 6 dígitos a<br>
+            <strong style="color:#7DC7F6">{{ email }}</strong>
+          </p>
+        </div>
+
+        {% if error %}
+        <div class="login-alert">
+          <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="{% url 'verificar_otp' %}" method="post" id="otpForm">
+          {% csrf_token %}
+
+          <div class="login-field-group">
+            <label class="login-field-label">Código de verificación</label>
+            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px">
+              {% for i in "123456" %}
+              <input type="text"
+                     maxlength="1"
+                     class="otp-digit"
+                     style="width:48px;height:56px;text-align:center;font-size:1.4rem;font-weight:700;background:#0a1929;border:1.5px solid #1a3a5c;border-radius:10px;color:#e2f4ff;outline:none;transition:border-color 0.3s,box-shadow 0.3s"
+                     inputmode="numeric"
+                     pattern="[0-9]">
+              {% endfor %}
+            </div>
+            <input type="hidden" name="codigo" id="codigoCompleto">
+          </div>
+
+          <button type="submit" class="btn-login" id="btnVerificar">
+            <span><i class="fas fa-check-circle me-2"></i>Verificar</span>
+          </button>
+        </form>
+
+        <div class="login-links" style="margin-top:20px">
+          <p style="color:var(--s-suave);font-size:0.85rem;margin-bottom:10px">
+            ¿No recibiste el código?
+          </p>
+          <a href="{% url 'reenviar_otp' %}" class="login-forgot-link">
+            <i class="fas fa-redo me-1"></i> Reenviar código
+          </a>
+          <div class="login-divider-or">o</div>
+          <a href="{% url 'iniciar_sesion' %}" class="login-forgot-link">
+            <i class="fas fa-arrow-left me-1"></i> Volver al inicio de sesión
+          </a>
+        </div>
+
+        <!-- Temporizador -->
+        <div style="text-align:center;margin-top:16px">
+          <span style="color:var(--s-suave);font-size:0.78rem">
+            El código expira en <span id="temporizador" style="color:#F7CF0D;font-weight:600">10:00</span>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Manejo de los 6 inputs del OTP
+const digits = document.querySelectorAll('.otp-digit');
+const hidden = document.getElementById('codigoCompleto');
+
+digits.forEach((input, idx) => {
+  // Focus style
+  input.addEventListener('focus', () => {
+    input.style.borderColor = '#7DC7F6';
+    input.style.boxShadow = '0 0 0 3px rgba(125,199,246,0.15)';
+  });
+  input.addEventListener('blur', () => {
+    input.style.borderColor = '#1a3a5c';
+    input.style.boxShadow = 'none';
+  });
+
+  // Solo números
+  input.addEventListener('keypress', e => {
+    if (!/[0-9]/.test(e.key)) e.preventDefault();
+  });
+
+  // Avanzar al siguiente
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/[^0-9]/g, '');
+    if (input.value && idx < digits.length - 1) {
+      digits[idx + 1].focus();
+    }
+    actualizarHidden();
+  });
+
+  // Retroceder con backspace
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !input.value && idx > 0) {
+      digits[idx - 1].focus();
+    }
+  });
+});
+
+// Pegar código completo
+document.addEventListener('paste', e => {
+  const texto = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+  if (texto.length === 6) {
+    digits.forEach((d, i) => { d.value = texto[i] || ''; });
+    actualizarHidden();
+    digits[5].focus();
+  }
+});
+
+function actualizarHidden() {
+  hidden.value = Array.from(digits).map(d => d.value).join('');
+}
+
+// Validar antes de enviar
+document.getElementById('otpForm').addEventListener('submit', function(e) {
+  actualizarHidden();
+  if (hidden.value.length !== 6) {
+    e.preventDefault();
+    alert('Por favor ingresa el código completo de 6 dígitos.');
+  }
+});
+
+// Temporizador 10 minutos
+let segundos = 600;
+const timer = document.getElementById('temporizador');
+const intervalo = setInterval(() => {
+  segundos--;
+  const m = Math.floor(segundos / 60).toString().padStart(2, '0');
+  const s = (segundos % 60).toString().padStart(2, '0');
+  timer.textContent = `${m}:${s}`;
+  if (segundos <= 0) {
+    clearInterval(intervalo);
+    timer.textContent = 'Expirado';
+    timer.style.color = '#ef4444';
+  }
+}, 1000);
+
+// Focus en primer campo
+digits[0].focus();
+</script>
+{% endblock %}

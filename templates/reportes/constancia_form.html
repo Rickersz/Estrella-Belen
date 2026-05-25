@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Crear Constancia{% endblock %}
+{% block titulo_pagina %}Crear Constancia{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5>Crear Constancia</h5></div>
+    <div class="s-card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.title.label_tag }}
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="text-danger">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.student.label_tag }}
+                {{ form.student }}
+                {% if form.student.errors %}
+                    <div class="text-danger">{{ form.student.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.reason.label_tag }}
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                    <div class="text-danger">{{ form.reason.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.notes.label_tag }}
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger">{{ form.notes.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar constancia</button>
+            <a href="{% url 'reportes_home' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

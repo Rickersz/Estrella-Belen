@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Constancia{% endblock %}
+{% block titulo_pagina %}Constancia{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5>{{ const.title }}</h5></div>
+    <div class="s-card-body">
+        <p><strong>Estudiante:</strong> {{ const.student.first_name }} {{ const.student.last_name }}</p>
+        <p><strong>Fecha:</strong> {{ const.date_issued }}</p>
+        <p><strong>Motivo:</strong> {{ const.reason }}</p>
+        <p><strong>Notas:</strong> {{ const.notes }}</p>
+        <p><a href="{% url 'constancia_detail' const.pk %}">Descargar PDF</a> (si está disponible)</p>
+    </div>
+</div>
+{% endblock %}

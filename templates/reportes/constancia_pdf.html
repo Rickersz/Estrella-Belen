@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; }
+        .header { text-align:center; margin-bottom:20px; }
+        .content { margin: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Constancia</h2>
+        <p>{{ const.title }}</p>
+    </div>
+    <div class="content">
+        <p>Se hace constar que <strong>{{ const.student.first_name }} {{ const.student.last_name }}</strong></p>
+        <p>Motivo: {{ const.reason }}</p>
+        <p>Fecha de emisión: {{ const.date_issued }}</p>
+        <p>{{ const.notes }}</p>
+    </div>
+</body>
+</html>

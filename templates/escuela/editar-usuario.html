@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Editar Usuario{% endblock %}
+{% block titulo_pagina %}Editar Usuario{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5>Editar Usuario</h5></div>
+    <div class="s-card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">{{ form.email.label_tag }}{{ form.email }}</div>
+            <div class="mb-3">{{ form.first_name.label_tag }}{{ form.first_name }}</div>
+            <div class="mb-3">{{ form.last_name.label_tag }}{{ form.last_name }}</div>
+            <div class="mb-3">{{ form.is_admin.label_tag }}{{ form.is_admin }}</div>
+            <div class="mb-3">{{ form.is_teacher.label_tag }}{{ form.is_teacher }}</div>
+            <div class="mb-3">{{ form.is_student.label_tag }}{{ form.is_student }}</div>
+            <div class="mb-3">{{ form.is_active.label_tag }}{{ form.is_active }}</div>
+            <button class="btn btn-primary" type="submit">Guardar</button>
+            <a href="{% url 'user_management' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

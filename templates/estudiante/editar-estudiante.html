@@ -1,0 +1,210 @@
+﻿{% extends 'base.html' %}
+
+{% block page_title %} Estrella de Belén - Editar Estudiante {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h3 class="page-title">Edit Students</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'student_list' %}">Students</a></li>
+                <li class="breadcrumb-item active">Edit Students</li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <!-- Student Form -->
+                        <div class="col-12">
+                            <h5 class="form-title"><span>Student Information</span></h5>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Nombres</label>
+                                <input type="text" class="form-control" name="first_name"
+                                    value="{{student.first_name}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Apellidos</label>
+                                <input type="text" class="form-control" name="last_name" value="{{student.last_name}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Cédula escolar</label>
+                                <input type="text" class="form-control" name="student_id"
+                                    value="{{student.student_id}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Class</label>
+                                <input type="text" class="form-control" name="student_class"
+                                    value="{{student.student_class}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Section</label>
+                                <input type="text" class="form-control" name="section" value="{{student.section}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Género</label>
+                                <select class="form-control" name="gender" value="{{student.gender}}">
+                                    <option value="Female" {% if student.gender=='Female' %} selected {% endif %}>Femenino
+                                    </option>
+                                    <option value="Male" {% if student.gender=='Male' %} selected {% endif %}>Masculino
+                                    </option>
+                                    <option value="Others" {% if student.gender=='Others' %} selected {% endif %}>Otros
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <div>
+                                    <input type="date" class="form-control" name="date_of_birth"
+                                        value="{{student.date_of_birth | date:'Y-m-d'}}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Religion</label>
+                                <input type="text" class="form-control" name="religion" value="{{student.religion}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Joining Date</label>
+                                <div>
+                                    <input type="date" class="form-control" name="joining_date"
+                                        value="{{student.joining_date | date:'Y-m-d'}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Mobile Number</label>
+                                <input type="text" class="form-control" name="mobile_number"
+                                    value="{{student.mobile_number}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Admission Number</label>
+                                <input type="text" class="form-control" name="admission_number"
+                                    value="{{student.admission_number}}">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Student Image</label>
+                                <input type="file" class="form-control" name="student_image">
+                                {% if student.student_image %}
+                                <small>Current Image: <a href="{{student.student_image.url}}"
+                                        target="_blank">{{student.student_image}}</a></small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- ******* Parent Form **********  -->
+                        <div class="col-12">
+                            <h5 class="form-title"><span>Parent Information</span></h5>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Father's Name</label>
+                                <input type="text" class="form-control" name="father_name"
+                                    value="{{parent.father_name}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Father's Occupation</label>
+                                <input type="text" class="form-control" name="father_occupation"
+                                    value="{{parent.father_occupation}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Father's Mobile</label>
+                                <input type="text" class="form-control" name="father_mobile"
+                                    value="{{parent.father_mobile}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Father's Email</label>
+                                <input type="email" class="form-control" name="father_email"
+                                    value="{{parent.father_email}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Mother's Name</label>
+                                <input type="text" class="form-control" name="mother_name"
+                                    value="{{parent.mother_name}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Mother's Occupation</label>
+                                <input type="text" class="form-control" name="mother_occupation"
+                                    value="{{parent.mother_occupation}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Mother's Mobile</label>
+                                <input type="text" class="form-control" name="mother_mobile"
+                                    value="{{parent.mother_mobile}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Mother's Email</label>
+                                <input type="email" class="form-control" name="mother_email"
+                                    value="{{parent.mother_email}}">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Present Address</label>
+                                <textarea class="form-control"
+                                    name="present_address">{{parent.present_address}}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="form-group">
+                                <label>Permanent Address</label>
+                                <textarea class="form-control"
+                                    name="permanent_address">{{parent.permanent_address}}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
