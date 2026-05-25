@@ -91,6 +91,9 @@ class Student(models.Model):
     @property
     def grado_completo(self):
         return f"{self.etapa} / {self.grado} - {self.section}"
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.student_id}"
     
 
     def save(self, *args, **kwargs):

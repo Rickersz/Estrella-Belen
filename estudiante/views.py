@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -9,6 +9,7 @@ import csv
 from .forms import EnrollmentForm, ParentForm, StudentForm
 from .models import Student, Parent, Enrollment
 from escuela.views import create_notification
+from reportes.models import Constancia
 
 
 def puede_ver_estudiantes(user):
@@ -61,7 +62,7 @@ def add_student(request):
             return redirect('constancia_inscripcion', slug=student.slug)
 
         agregar_errores_formulario(request, student_form, parent_form, enrollment_form)
-        messages.error(request, 'Revisa los datos ingresados e inténtalo nuevamente.')
+        messages.error(request, 'Revisa los datos ingresados e intÃ©ntalo nuevamente.')
 
     return render(request, "estudiante/agregar-estudiante.html")
 
@@ -73,7 +74,7 @@ def add_student(request):
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def student_list(request):
     students = Student.objects.select_related('parent').all()
-     # 🔎 SEARCH
+     # ðŸ”Ž SEARCH
     query = request.GET.get('q')
     if query:
         students = students.filter(
@@ -82,7 +83,7 @@ def student_list(request):
             Q(student_id__icontains=query)
         )
 
-    # 🎯 FILTERS
+    # ðŸŽ¯ FILTERS
     etapa = request.GET.get('etapa')
     grado = request.GET.get('grado')
 
@@ -130,10 +131,17 @@ def edit_student(request, slug):
             return redirect('student_list')
 
         agregar_errores_formulario(request, student_form, parent_form)
-        messages.error(request, 'Revisa los datos ingresados e inténtalo nuevamente.')
+        messages.error(request, 'Revisa los datos ingresados e intentalo nuevamente.')
+    else:
+        student_form = StudentForm(instance=student)
+        parent_form = ParentForm(instance=parent)
 
-    return render(request, 'estudiante/editar-estudiante.html', {'student': student, 'parent': parent})
-
+    return render(request, 'estudiante/editar-estudiante.html', {
+        'student': student,
+        'parent': parent,
+        'student_form': student_form,
+        'parent_form': parent_form,
+    })
 
 # =========================
 # DELETE STUDENT
@@ -161,9 +169,9 @@ def download_students_csv(request):
 
     writer = csv.writer(response)
     writer.writerow([
-        'Cédula escolar', 'Nombres', 'Apellidos',
-        'Etapa', 'Grado', 'Sección',
-        'Género', 'Fecha de nacimiento', 'Número de admisión'
+        'CÃ©dula escolar', 'Nombres', 'Apellidos',
+        'Etapa', 'Grado', 'SecciÃ³n',
+        'GÃ©nero', 'Fecha de nacimiento', 'NÃºmero de admisiÃ³n'
     ])
 
     for student in Student.objects.all():
@@ -183,15 +191,18 @@ def download_students_csv(request):
 
 
 # =========================
-# CONSTANCIA DE INSCRIPCIÓN
+# CONSTANCIA DE INSCRIPCIÃ“N
 # =========================
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def constancia_inscripcion(request, slug):
     student = get_object_or_404(Student.objects.select_related('parent'), slug=slug)
     enrollment = Enrollment.objects.filter(student=student).order_by('-date_enrolled').first()
-    return render(request, 'estudiante/constancia-inscripcion.html', {
-        'student': student,
-        'enrollment': enrollment,
-        'parent': student.parent,
-    })
+    constancia = Constancia.objects.create(
+        report_type=Constancia.TIPO_INSCRIPCION,
+        student=student,
+        issued_by=request.user,
+        academic_year=enrollment.academic_year if enrollment else '2025-2026',
+        amount_paid=enrollment.monto_inscripcion if enrollment else None,
+    )
+    return redirect('constancia_detail', pk=constancia.pk)

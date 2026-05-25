@@ -8,23 +8,38 @@
     <div class="s-card-header">
         <div class="d-flex justify-content-between align-items-center">
             <h5>Reportes</h5>
-            <a href="{% url 'constancia_create' %}" class="btn btn-primary">Nueva constancia</a>
+            <a href="{% url 'constancia_create' %}" class="btn btn-primary">Nuevo reporte PDF</a>
         </div>
     </div>
     <div class="s-card-body">
+        <form method="get" class="mb-3">
+            <div class="input-group">
+                <input type="search" name="q" value="{{ query }}" class="form-control" placeholder="Buscar constancia o estudiante">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+            </div>
+        </form>
+
         {% if constancias %}
         <div class="s-tabla-wrap">
             <table class="s-tabla">
-                <thead><tr><th>Título</th><th>Estudiante</th><th>Fecha</th><th>Emitida por</th><th>Acción</th></tr></thead>
+                <thead>
+                    <tr><th>Tipo</th><th>Estudiante</th><th>Fecha</th><th>Emitida por</th><th>Accion</th></tr>
+                </thead>
                 <tbody>
                 {% for c in constancias %}
                     <tr>
-                        <td>{{ c.title }}</td>
+                        <td>{{ c.get_report_type_display }}</td>
                         <td>{{ c.student.first_name }} {{ c.student.last_name }}</td>
                         <td>{{ c.date_issued }}</td>
-                        <td>{{ c.issued_by.get_full_name|default:c.issued_by.email if c.issued_by else 'N/A' }}</td>
                         <td>
-                            <a href="{% url 'constancia_detail' c.pk %}" class="btn btn-sm btn-outline-primary">Descargar</a>
+                            {% if c.issued_by %}
+                                {{ c.issued_by.get_full_name|default:c.issued_by.email }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'constancia_detail' c.pk %}" class="btn btn-sm btn-outline-primary">Descargar PDF</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -32,7 +47,7 @@
             </table>
         </div>
         {% else %}
-        <p>No hay constancias registradas. Pulsa <a href="{% url 'constancia_create' %}">aquí</a> para crear una.</p>
+        <p>No hay constancias registradas. Pulsa <a href="{% url 'constancia_create' %}">aqui</a> para crear una.</p>
         {% endif %}
     </div>
 </div>

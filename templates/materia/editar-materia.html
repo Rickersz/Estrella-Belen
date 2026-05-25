@@ -1,15 +1,15 @@
-{% extends 'base.html' %}
+ï»¿{% extends 'base.html' %}
 
-{% block page_title %} Estrella de Belén - Editar Materia {% endblock %}
+{% block page_title %}Estrella de Belen - Editar Materia{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col">
-            <h3 class="page-title">Edit Subject</h3>
+            <h3 class="page-title">Editar Materia</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">Subject</a></li>
-                <li class="breadcrumb-item active">Edit Subject</li>
+                <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">Materias</a></li>
+                <li class="breadcrumb-item active">Editar</li>
             </ul>
         </div>
     </div>
@@ -19,33 +19,33 @@
     <div class="col-sm-12">
         <div class="card">
             <div class="card-body">
-                <form method="post" actiion="{% url 'edit_subject' subject.code %}">
+                <form method="post" action="{% url 'edit_subject' subject.code %}">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-12">
-                            <h5 class="form-title"><span>Subject Information</span></h5>
+                            <h5 class="form-title"><span>Informacion de la materia</span></h5>
                         </div>
                         <div class="col-12 col-sm-6">
                             <div class="form-group">
-                                <label>Subject ID</label>
-                                <input type="text" class="form-control" name="subject_code" value="{{subject.code}}">
+                                {{ form.code.label_tag }}
+                                {{ form.code }}
                             </div>
                         </div>
                         <div class="col-12 col-sm-6">
                             <div class="form-group">
-                                <label>Subject Name</label>
-                                <input type="text" class="form-control" name="subject_name" value="{{subject.name}}">
+                                {{ form.name.label_tag }}
+                                {{ form.name }}
                             </div>
                         </div>
                         <div class="col-12 col-sm-6">
                             <div class="form-group">
-                                <label>Class</label>
-                                <input type="text" class="form-control" name="class_level"
-                                    value="{{subject.class_level}}">
+                                {{ form.class_level.label_tag }}
+                                {{ form.class_level }}
                             </div>
                         </div>
                         <div class="col-12">
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <a href="{% url 'subject_list' %}" class="btn btn-secondary">Cancelar</a>
                         </div>
                     </div>
                 </form>

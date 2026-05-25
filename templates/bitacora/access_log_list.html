@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Bitácora de Accesos{% endblock %}
-{% block titulo_pagina %}Bitácora de Accesos{% endblock %}
+{% block titulo %}Bitacora de Accesos{% endblock %}
+{% block titulo_pagina %}Bitacora de Accesos{% endblock %}
 
 {% block contenido %}
 <div class="s-card">
@@ -9,13 +9,13 @@
     <div class="s-tabla-wrap">
         <table class="s-tabla">
             <thead>
-                <tr><th>Fecha</th><th>Usuario/Email</th><th>IP</th><th>Acción</th><th>Ruta</th></tr>
+                <tr><th>Fecha</th><th>Usuario/Email</th><th>IP</th><th>Accion</th><th>Ruta</th></tr>
             </thead>
             <tbody>
                 {% for log in logs %}
                 <tr>
                     <td>{{ log.created_at }}</td>
-                    <td>{{ log.user.email if log.user else log.email }}</td>
+                    <td>{% if log.user %}{{ log.user.email }}{% else %}{{ log.email }}{% endif %}</td>
                     <td>{{ log.ip_address }}</td>
                     <td>{{ log.action }}</td>
                     <td>{{ log.path }}</td>

@@ -20,6 +20,7 @@ def puede_gestionar_materias(user):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_gestionar_materias, login_url='iniciar_sesion')
 def add_subject(request):
+    form = SubjectForm()
     if request.method == 'POST':
         data = request.POST.copy()
         if 'subject_code' in data and 'code' not in data:
@@ -32,13 +33,13 @@ def add_subject(request):
                 label = form.fields[field].label if field in form.fields else 'Formulario'
                 for error in errors:
                     messages.error(request, f'{label}: {error}')
-            return render(request, 'materia/agregar-materia.html')
+            return render(request, 'materia/agregar-materia.html', {'form': form})
 
         form.save()
         messages.success(request, 'Materia agregada correctamente.')
         return redirect('subject_list')
 
-    return render(request, 'materia/agregar-materia.html')
+    return render(request, 'materia/agregar-materia.html', {'form': form})
 
 
 @login_required(login_url='iniciar_sesion')
@@ -52,6 +53,7 @@ def subject_list(request):
 @user_passes_test(puede_gestionar_materias, login_url='iniciar_sesion')
 def edit_subject(request, code):
     subject = get_object_or_404(Subject, code=code)
+    form = SubjectForm(instance=subject)
 
     if request.method == 'POST':
         data = request.POST.copy()
@@ -65,13 +67,13 @@ def edit_subject(request, code):
                 label = form.fields[field].label if field in form.fields else 'Formulario'
                 for error in errors:
                     messages.error(request, f'{label}: {error}')
-            return render(request, 'materia/editar-materia.html', {'subject': subject})
+            return render(request, 'materia/editar-materia.html', {'subject': subject, 'form': form})
 
         form.save()
         messages.success(request, 'Materia actualizada correctamente.')
         return redirect('subject_list')
 
-    return render(request, 'materia/editar-materia.html', {'subject': subject})
+    return render(request, 'materia/editar-materia.html', {'subject': subject, 'form': form})
 
 
 @login_required(login_url='iniciar_sesion')

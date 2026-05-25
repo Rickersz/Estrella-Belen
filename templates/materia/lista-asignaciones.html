@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Estrella de Belen - Asignaciones{% endblock %}
+{% block titulo_pagina %}Asignaciones{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <h3 class="page-title">Asignaciones</h3>
+        </div>
+        {% if user.is_admin %}
+        <div class="col-auto text-end float-right ml-auto">
+            <a href="{% url 'add_assignment' %}" class="btn btn-primary"><i class="fas fa-plus"></i></a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card card-table">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-center mb-0">
+                        <thead>
+                            <tr>
+                                <th>Clase</th>
+                                <th>Materia</th>
+                                <th>Profesor</th>
+                                <th>Activa</th>
+                                {% if user.is_admin %}<th class="text-end">Accion</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in assignments %}
+                            <tr>
+                                <td>{{ assignment.class_assigned }}</td>
+                                <td>{{ assignment.subject }}</td>
+                                <td>{{ assignment.teacher }}</td>
+                                <td>{% if assignment.is_active %}Si{% else %}No{% endif %}</td>
+                                {% if user.is_admin %}
+                                <td class="text-end">
+                                    <a href="{% url 'edit_assignment' assignment.id %}" class="btn btn-sm bg-success-light me-2">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'delete_assignment' assignment.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm bg-danger-light" onclick="return confirm('Seguro que quieres eliminar esta asignacion?');">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5">No hay asignaciones registradas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

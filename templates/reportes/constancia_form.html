@@ -5,41 +5,118 @@
 
 {% block contenido %}
 <div class="s-card">
-    <div class="s-card-header"><h5>Crear Constancia</h5></div>
+    <div class="s-card-header"><h5>Crear constancia o reporte</h5></div>
     <div class="s-card-body">
         <form method="post" novalidate>
             {% csrf_token %}
-            <div class="mb-3">
-                {{ form.title.label_tag }}
-                {{ form.title }}
-                {% if form.title.errors %}
-                    <div class="text-danger">{{ form.title.errors }}</div>
-                {% endif %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.report_type.label_tag }}
+                    {{ form.report_type }}
+                    {{ form.report_type.errors }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.student.label_tag }}
+                    <input type="search" id="studentSearch" class="form-control mb-2" placeholder="Buscar por nombre, apellido, cedula o grado">
+                    {{ form.student }}
+                    <small id="studentSearchHelp" class="text-muted">Escribe para filtrar la lista de estudiantes.</small>
+                    {{ form.student.errors }}
+                </div>
             </div>
-            <div class="mb-3">
-                {{ form.student.label_tag }}
-                {{ form.student }}
-                {% if form.student.errors %}
-                    <div class="text-danger">{{ form.student.errors }}</div>
-                {% endif %}
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    {{ form.academic_year.label_tag }}
+                    {{ form.academic_year }}
+                    {{ form.academic_year.errors }}
+                </div>
+                <div class="col-md-4 mb-3 field-inscripcion">
+                    {{ form.amount_paid.label_tag }}
+                    {{ form.amount_paid }}
+                    {{ form.amount_paid.errors }}
+                </div>
+                <div class="col-md-4 mb-3 field-solvencia">
+                    {{ form.solvent_until.label_tag }}
+                    {{ form.solvent_until }}
+                    {{ form.solvent_until.errors }}
+                </div>
+                <div class="col-md-4 mb-3 field-comportamiento">
+                    {{ form.behavior_rating.label_tag }}
+                    {{ form.behavior_rating }}
+                    {{ form.behavior_rating.errors }}
+                </div>
             </div>
+
+            <div class="row field-solvencia">
+                <div class="col-md-6 mb-3">
+                    {{ form.representative_name.label_tag }}
+                    {{ form.representative_name }}
+                    {{ form.representative_name.errors }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.representative_id.label_tag }}
+                    {{ form.representative_id }}
+                    {{ form.representative_id.errors }}
+                </div>
+            </div>
+
             <div class="mb-3">
                 {{ form.reason.label_tag }}
                 {{ form.reason }}
-                {% if form.reason.errors %}
-                    <div class="text-danger">{{ form.reason.errors }}</div>
-                {% endif %}
+                {{ form.reason.errors }}
             </div>
             <div class="mb-3">
                 {{ form.notes.label_tag }}
                 {{ form.notes }}
-                {% if form.notes.errors %}
-                    <div class="text-danger">{{ form.notes.errors }}</div>
-                {% endif %}
+                {{ form.notes.errors }}
             </div>
-            <button type="submit" class="btn btn-primary">Guardar constancia</button>
+
+            <button type="submit" class="btn btn-primary">Generar PDF</button>
             <a href="{% url 'reportes_home' %}" class="btn btn-secondary">Cancelar</a>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const type = document.getElementById('id_report_type');
+    const studentSearch = document.getElementById('studentSearch');
+    const studentSelect = document.querySelector('[data-searchable-students="true"]');
+    const groups = {
+        inscripcion: document.querySelectorAll('.field-inscripcion'),
+        solvencia: document.querySelectorAll('.field-solvencia'),
+        comportamiento: document.querySelectorAll('.field-comportamiento')
+    };
+
+    function toggleFields() {
+        Object.values(groups).forEach(items => items.forEach(item => item.style.display = 'none'));
+        if (type.value === 'inscripcion') groups.inscripcion.forEach(item => item.style.display = '');
+        if (type.value === 'solvencia') groups.solvencia.forEach(item => item.style.display = '');
+        if (type.value === 'comportamiento') groups.comportamiento.forEach(item => item.style.display = '');
+    }
+
+    type.addEventListener('change', toggleFields);
+    toggleFields();
+
+    if (studentSearch && studentSelect) {
+        const options = Array.from(studentSelect.options).map(option => ({
+            option,
+            text: option.textContent.toLowerCase()
+        }));
+
+        studentSearch.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+            options.forEach(({ option, text }) => {
+                option.hidden = query && !text.includes(query);
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

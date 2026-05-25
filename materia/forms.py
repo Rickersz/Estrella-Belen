@@ -14,7 +14,7 @@ class SubjectForm(forms.ModelForm):
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise forms.ValidationError('Ya existe una materia con este cÃ³digo.')
+            raise forms.ValidationError('Ya existe una materia con este codigo.')
         return code
 
     def clean_name(self):

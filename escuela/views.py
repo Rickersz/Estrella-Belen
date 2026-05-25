@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from autenticacion.models import CustomUser
 from .forms import UserCreationForm, UserEditForm
 from escuela import context_processors
@@ -13,6 +14,20 @@ from materia.models import Subject
 from bitacora.models import AccessLog
 
 
+def get_admin_dashboard_context(extra_context=None):
+    context = {
+        'students_count': Student.objects.count(),
+        'teachers_count': Teacher.objects.count(),
+        'subjects_count': Subject.objects.count(),
+        'access_logs_count': AccessLog.objects.count(),
+        'recent_students': Student.objects.select_related('parent').order_by('-id')[:8],
+        'recent_access_logs': AccessLog.objects.select_related('user').order_by('-created_at')[:8],
+    }
+    if extra_context:
+        context.update(extra_context)
+    return context
+
+
 @login_required(login_url='iniciar_sesion')
 def index(request):
     dashboards = context_processors.dashboards(request)['dashboards']
@@ -21,7 +36,7 @@ def index(request):
      # multiples roles: render default at '/' and selected dashboard would be at dashboard/<role> URL
         dash = dashboards[0]['url_name']  # Default to first role
         if dash == 'admin_dashboard':
-            return render(request, 'escuela/inicio.html', {'dashboards': dashboards})
+            return render(request, 'escuela/inicio.html', get_admin_dashboard_context({'dashboards': dashboards}))
         elif dash == 'teacher_dashboard':
             return render(request, 'profesor/panel-profesor.html', {'dashboards': dashboards})
         elif dash == 'student_dashboard':
@@ -43,13 +58,7 @@ def is_student(user):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_admin, login_url='iniciar_sesion')
 def admin_dashboard(request):
-    context = {
-        'students': Student.objects.all(),
-        'teachers': Teacher.objects.all(),
-        'subjects': Subject.objects.all(),
-        'access_logs': AccessLog.objects.all(),
-    }
-    return render(request, 'escuela/inicio.html', context)
+    return render(request, 'escuela/inicio.html', get_admin_dashboard_context())
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_teacher, login_url='iniciar_sesion')
@@ -146,6 +155,7 @@ def edit_user(request, user_id):
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
 def toggle_lock_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     # Toggle the locked state
@@ -162,13 +172,9 @@ def toggle_lock_user(request, user_id):
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
 def delete_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
-    if request.method == 'POST':
-        user.delete()
-        messages.success(request, 'Usuario eliminado correctamente.')
-    else:
-        # allow GET for convenience but prefer POST from UI
-        user.delete()
-        messages.success(request, 'Usuario eliminado correctamente.')
+    user.delete()
+    messages.success(request, 'Usuario eliminado correctamente.')
     return redirect('user_management')
