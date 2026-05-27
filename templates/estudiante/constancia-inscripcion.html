@@ -241,6 +241,12 @@
     <button class="btn-imprimir" onclick="window.print()">
       <i class="fas fa-print"></i> Imprimir Constancia
     </button>
+    <form method="post" action="{% url 'constancia_inscripcion' student.slug %}" style="display:inline">
+      {% csrf_token %}
+      <button class="btn-imprimir" type="submit">
+        <i class="fas fa-file-pdf"></i> Emitir PDF
+      </button>
+    </form>
     <a href="{% url 'student_list' %}" class="btn-volver">
       <i class="fas fa-arrow-left"></i> Volver a Estudiantes
     </a>

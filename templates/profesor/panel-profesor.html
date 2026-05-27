@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Panel Profesor{% endblock %}
+{% block titulo_pagina %}Panel Profesor{% endblock %}
+{% block subtitulo_pagina %}Secciones y materias asignadas{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-layer-group"></i></div><div><div class="s-stat-valor">{{ sections_count }}</div><div class="s-stat-label">Secciones</div></div></div></div>
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-book"></i></div><div><div class="s-stat-valor">{{ assignments.count }}</div><div class="s-stat-label">Materias</div></div></div></div>
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-user-graduate"></i></div><div><div class="s-stat-valor">{{ students_count }}</div><div class="s-stat-label">Estudiantes</div></div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Asignaciones</h5></div>
+            <div class="s-tabla-wrap">
+                <table class="s-tabla"><thead><tr><th>Seccion</th><th>Materia</th></tr></thead><tbody>
+                {% for assignment in assignments %}
+                    <tr><td>{{ assignment.class_assigned.class_id }} - {{ assignment.class_assigned.section }}</td><td>{{ assignment.subject.name }}</td></tr>
+                {% empty %}<tr><td colspan="2" style="text-align:center;padding:30px">Sin asignaciones</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Estudiantes de mis secciones</h5></div>
+            <div class="s-tabla-wrap">
+                <table class="s-tabla"><thead><tr><th>Nombre</th><th>Grado</th><th>Seccion</th></tr></thead><tbody>
+                {% for student in students %}
+                    <tr><td>{{ student.first_name }} {{ student.last_name }}</td><td>{{ student.grado|default:"-" }}</td><td>{{ student.section }}</td></tr>
+                {% empty %}<tr><td colspan="3" style="text-align:center;padding:30px">Sin estudiantes asignados</td></tr>{% endfor %}
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

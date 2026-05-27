@@ -22,6 +22,7 @@
             <div class="row mt-2">
                 <div class="col-md-4">{{ form.is_student.label_tag }}{{ form.is_student }}</div>
                 <div class="col-md-4">{{ form.is_teacher.label_tag }}{{ form.is_teacher }}</div>
+                <div class="col-md-4">{{ form.is_representative.label_tag }}{{ form.is_representative }}</div>
                 <div class="col-md-4">{{ form.is_active.label_tag }}{{ form.is_active }}</div>
             </div>
             <div class="mt-3">
@@ -41,7 +42,7 @@
                 <tr>
                     <td>{{ u.email }}</td>
                     <td>{{ u.get_full_name|default:u.email }}</td>
-                    <td>{% if u.is_admin %}Admin {% endif %}{% if u.is_teacher %}Profesor {% endif %}{% if u.is_student %}Estudiante{% endif %}</td>
+                    <td>{% if u.is_admin %}Admin {% endif %}{% if u.is_teacher %}Profesor {% endif %}{% if u.is_representative %}Representante {% endif %}{% if u.is_student %}Estudiante{% endif %}</td>
                     <td>{{ u.is_active }}</td>
                     <td><a href="{% url 'edit_user' u.id %}" class="btn btn-sm btn-secondary">Editar</a></td>
                 </tr>

@@ -33,11 +33,11 @@
     <div class="col-xl-3 col-sm-6">
         <div class="s-stat-card">
             <div class="s-stat-icono dorado">
-                <i class="fas fa-file-alt"></i>
+                <i class="fas fa-wallet"></i>
             </div>
             <div>
-                <div class="s-stat-valor">{{ access_logs_count|default:"0" }}</div>
-                <div class="s-stat-label">Accesos</div>
+                <div class="s-stat-valor">{{ pending_payments_count|default:"0" }}</div>
+                <div class="s-stat-label">Pagos pendientes</div>
             </div>
         </div>
     </div>
@@ -76,6 +76,9 @@
                 </a>
                 <a href="{% url 'access_log' %}" class="s-btn s-btn-secundario">
                     <i class="fas fa-file-alt"></i> Ver BitÃ¡cora
+                </a>
+                <a href="{% url 'payment_dashboard' %}" class="s-btn s-btn-secundario">
+                    <i class="fas fa-wallet"></i> Gestionar Pagos
                 </a>
             </div>
         </div>

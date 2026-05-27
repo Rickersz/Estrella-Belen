@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Panel Representante{% endblock %}
+{% block titulo_pagina %}Panel Representante{% endblock %}
+{% block subtitulo_pagina %}Estado academico y financiero{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-users"></i></div><div><div class="s-stat-valor">{{ students.count }}</div><div class="s-stat-label">Estudiantes</div></div></div></div>
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-wallet"></i></div><div><div class="s-stat-valor">{{ debt }}</div><div class="s-stat-label">Deuda pendiente</div></div></div></div>
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-bell"></i></div><div><div class="s-stat-valor">{{ pending_payments.count }}</div><div class="s-stat-label">Alertas</div></div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Mis estudiantes</h5></div>
+            {% for student in students %}
+                <div style="padding:12px;border-bottom:1px solid var(--s-borde)">
+                    <strong>{{ student.first_name }} {{ student.last_name }}</strong><br>
+                    <span style="color:var(--s-suave)">Grado: {{ student.grado|default:"-" }} | Seccion: {{ student.section }}</span>
+                </div>
+            {% empty %}
+                <div style="padding:30px;text-align:center;color:var(--s-suave)">No hay estudiantes asociados</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="s-card">
+            <div class="s-card-header">
+                <h5 class="s-card-titulo">Pagos y proximos vencimientos</h5>
+                <a href="{% url 'payment_dashboard' %}" class="s-btn s-btn-secundario">Ver pagos</a>
+            </div>
+            {% include 'pagos/_payment_table.html' with payments=payments %}
+        </div>
+    </div>
+</div>
+{% endblock %}

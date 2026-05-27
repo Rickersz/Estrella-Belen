@@ -1,0 +1,33 @@
+<div class="s-tabla-wrap">
+    <table class="s-tabla">
+        <thead>
+            <tr>
+                <th>Estudiante</th>
+                <th>Representante</th>
+                <th>Fecha limite</th>
+                <th>Pagado</th>
+                <th>Saldo</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.student.first_name }} {{ payment.student.last_name }}</td>
+                <td>{{ payment.representative_name }}</td>
+                <td>{{ payment.due_date|date:"d/m/Y" }}</td>
+                <td>{{ payment.amount_paid }}</td>
+                <td>{{ payment.balance }}</td>
+                <td><span class="s-badge {% if payment.status == 'pagado' %}s-badge-verde{% elif payment.status == 'vencido' %}s-badge-dorado{% else %}s-badge-azul{% endif %}">{{ payment.get_status_display }}</span></td>
+                <td class="text-end">
+                    <a href="{% url 'payment_detail' payment.pk %}" class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-eye"></i></a>
+                    <a href="{% url 'payment_receipt_pdf' payment.pk %}" class="s-btn s-btn-exito" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-download"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;color:var(--s-suave);padding:30px">No hay pagos registrados</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

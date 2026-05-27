@@ -9,11 +9,13 @@ import csv
 from .forms import EnrollmentForm, ParentForm, StudentForm
 from .models import Student, Parent, Enrollment
 from escuela.views import create_notification
+from escuela.models import ClassTeacherAssignment
+from profesor.models import Teacher
 from reportes.models import Constancia
 
 
 def puede_ver_estudiantes(user):
-    return user.is_authenticated and (getattr(user, 'is_admin', False) or getattr(user, 'is_teacher', False) or getattr(user, 'is_student', False))
+    return user.is_authenticated and (getattr(user, 'is_admin', False) or getattr(user, 'is_teacher', False) or getattr(user, 'is_representative', False))
 
 
 def puede_gestionar_estudiantes(user):
@@ -30,6 +32,29 @@ def agregar_errores_formulario(request, *forms):
             label = form.fields[field].label if field in form.fields else 'Formulario'
             for error in errors:
                 messages.error(request, f'{label}: {error}')
+
+
+def secciones_asignadas_profesor(user):
+    teacher = Teacher.objects.filter(email__iexact=user.email).first()
+    if not teacher:
+        return []
+    return list(
+        ClassTeacherAssignment.objects.filter(teacher=teacher, is_active=True)
+        .values_list('class_assigned__section', flat=True)
+        .distinct()
+    )
+
+
+def filtrar_estudiantes_por_rol(user, queryset):
+    if getattr(user, 'is_admin', False):
+        return queryset
+    if getattr(user, 'is_teacher', False):
+        sections = secciones_asignadas_profesor(user)
+        return queryset.filter(section__in=sections) if sections else queryset.none()
+    if getattr(user, 'is_representative', False):
+        parent = getattr(user, 'representante', None)
+        return queryset.filter(parent=parent) if parent else queryset.none()
+    return queryset.none()
 
 
 # =========================
@@ -73,7 +98,7 @@ def add_student(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def student_list(request):
-    students = Student.objects.select_related('parent').all()
+    students = filtrar_estudiantes_por_rol(request.user, Student.objects.select_related('parent').all())
      # ðŸ”Ž SEARCH
     query = request.GET.get('q')
     if query:
@@ -103,7 +128,7 @@ def student_list(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def student_detail(request, slug):
-    student = get_object_or_404(Student.objects.select_related('parent'), slug=slug)
+    student = get_object_or_404(filtrar_estudiantes_por_rol(request.user, Student.objects.select_related('parent')), slug=slug)
     return render(request, 'estudiante/detalle-estudiante.html', {'student': student})
 
 
@@ -113,7 +138,7 @@ def student_detail(request, slug):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_gestionar_estudiantes, login_url='iniciar_sesion')
 def edit_student(request, slug):
-    student = get_object_or_404(Student.objects.select_related('parent'), slug=slug)
+    student = get_object_or_404(filtrar_estudiantes_por_rol(request.user, Student.objects.select_related('parent')), slug=slug)
     parent = student.parent
 
     if request.method == 'POST':
@@ -196,13 +221,20 @@ def download_students_csv(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def constancia_inscripcion(request, slug):
-    student = get_object_or_404(Student.objects.select_related('parent'), slug=slug)
+    student = get_object_or_404(filtrar_estudiantes_por_rol(request.user, Student.objects.select_related('parent')), slug=slug)
     enrollment = Enrollment.objects.filter(student=student).order_by('-date_enrolled').first()
-    constancia = Constancia.objects.create(
-        report_type=Constancia.TIPO_INSCRIPCION,
-        student=student,
-        issued_by=request.user,
-        academic_year=enrollment.academic_year if enrollment else '2025-2026',
-        amount_paid=enrollment.monto_inscripcion if enrollment else None,
-    )
-    return redirect('constancia_detail', pk=constancia.pk)
+    if request.method == 'POST':
+        constancia = Constancia.objects.create(
+            report_type=Constancia.TIPO_INSCRIPCION,
+            student=student,
+            issued_by=request.user,
+            academic_year=enrollment.academic_year if enrollment else '2025-2026',
+            amount_paid=enrollment.monto_inscripcion if enrollment else None,
+        )
+        return redirect('constancia_detail', pk=constancia.pk)
+
+    return render(request, 'estudiante/constancia-inscripcion.html', {
+        'student': student,
+        'parent': student.parent,
+        'enrollment': enrollment,
+    })

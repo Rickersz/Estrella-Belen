@@ -19,7 +19,7 @@
     <div class="col-sm-12">
         <div class="card">
             <div class="card-body">
-                <form method="post" action="{% url 'edit_teacher' teacher.teacher_id %}">
+                <form method="post" action="{% url 'edit_teacher' teacher.teacher_id %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-12">
@@ -36,7 +36,7 @@
                             <div class="form-group">
                                 <label>Nombre</label>
                                 <input type="text" class="form-control" name="teacher_name"
-                                    value="{{teacher.teacher_name}}">
+                                    value="{{teacher.name}}">
                             </div>
                         </div>
                         <div class="col-12 col-sm-6">
@@ -84,33 +84,10 @@
                                     value="{{teacher.experience}}">
                             </div>
                         </div>
-                        <div class="col-12">
-                            <h5 class="form-title"><span>Detalles de acceso</span></h5>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="form-group">
-                                <label>Usuario</label>
-                                <input type="text" class="form-control" name="username" value="{{teacher.username}}">
-                            </div>
-                        </div>
                         <div class="col-12 col-sm-6">
                             <div class="form-group">
                                 <label>Correo electrónico</label>
                                 <input type="email" class="form-control" name="email" value="{{teacher.email}}">
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="form-group">
-                                <label>Contraseña</label>
-                                <input type="password" class="form-control" name="password"
-                                    value="{{teacher.password}}">
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="form-group">
-                                <label>Repetir contraseña</label>
-                                <input type="password" class="form-control" name="confirm_password"
-                                    value="{{teacher.password}}">
                             </div>
                         </div>
                         <div class="col-12">

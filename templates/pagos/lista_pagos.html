@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Historial de pagos{% endblock %}
+{% block titulo_pagina %}Historial de pagos{% endblock %}
+{% block subtitulo_pagina %}Consulta y filtra pagos escolares{% endblock %}
+
+{% block contenido %}
+<div class="s-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-5"><label class="form-label">Buscar</label><input class="form-control" name="q" value="{{ query }}" placeholder="Estudiante, cedula o referencia"></div>
+        <div class="col-md-4"><label class="form-label">Estado</label><select class="form-control" name="estado"><option value="">Todos</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><button class="s-btn s-btn-primario w-100" type="submit"><i class="fas fa-search"></i> Filtrar</button></div>
+    </form>
+</div>
+<div class="s-card">
+    {% include 'pagos/_payment_table.html' %}
+</div>
+{% endblock %}

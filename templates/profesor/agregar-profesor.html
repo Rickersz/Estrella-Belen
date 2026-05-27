@@ -19,7 +19,7 @@
     <div class="col-sm-12">
         <div class="card">
             <div class="card-body">
-                <form method="post" action="{% url 'add_teacher' %}">
+                <form method="post" action="{% url 'add_teacher' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-12">
@@ -78,31 +78,10 @@
                                 <input class="form-control" type="text" name="experience">
                             </div>
                         </div>
-                        <div class="col-12">
-                            <h5 class="form-title"><span>Detalles de acceso</span></h5>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="form-group">
-                                <label>Usuario</label>
-                                <input type="text" class="form-control" name="username">
-                            </div>
-                        </div>
                         <div class="col-12 col-sm-6">
                             <div class="form-group">
                                 <label>Correo electrónico</label>
                                 <input type="email" class="form-control" name="email">
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="form-group">
-                                <label>Contraseña</label>
-                                <input type="text" class="form-control" name="password">
-                            </div>
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <div class="form-group">
-                                <label>Repetir contraseña</label>
-                                <input type="text" class="form-control" name="confirm_password">
                             </div>
                         </div>
                         <div class="col-12">

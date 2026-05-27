@@ -45,6 +45,9 @@
     <!-- Panel derecho: formulario -->
     <div class="login-panel-right">
       <div class="login-form-wrap">
+        <div style="display:flex;justify-content:center;margin-bottom:18px">
+          <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belen" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,0.04);padding:6px">
+        </div>
         <h1 class="login-form-title">Bienvenido</h1>
         <p class="login-form-subtitle">Ingresa tus credenciales para continuar</p>
 
@@ -53,6 +56,15 @@
           <i class="fas fa-exclamation-circle"></i>
           {{ error }}
         </div>
+        {% endif %}
+
+        {% if messages %}
+          {% for message in messages %}
+          <div class="login-alert" style="border-left-color:#7DC7F6;background:rgba(125,199,246,0.08);color:#e2f4ff">
+            <i class="fas fa-info-circle"></i>
+            {{ message }}
+          </div>
+          {% endfor %}
         {% endif %}
 
         <form action="{% url 'iniciar_sesion' %}" method="post" id="loginForm">
@@ -79,12 +91,13 @@
             </div>
           </div>
 
-          <!-- Google reCAPTCHA v2 -->
+          {% if recaptcha_enabled %}
           <div class="login-field-group">
             <div class="login-field-wrap">
               <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}"></div>
             </div>
           </div>
+          {% endif %}
 
           {% if cuenta_bloqueada %}
           <div class="login-alert" style="border-left-color:#F7CF0D;background:rgba(247,207,13,0.08);color:#F7CF0D">
@@ -115,7 +128,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+{% if recaptcha_enabled %}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endif %}
 <script>
   function togglePassword() {
     const input = document.getElementById('password');

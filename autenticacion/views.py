@@ -6,8 +6,10 @@ from .models import CustomUser, PasswordResetRequest, OTPVerificacion
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 from django.utils import timezone
 from bitacora.models import AccessLog
+from .email_queue import enqueue_otp_email, enqueue_reset_email
 
 
 def get_client_ip(request):
@@ -38,46 +40,69 @@ def signup_view(request):
         except ValidationError as exc:
             return render(request, 'autenticacion/registrarse.html', {'error': ' '.join(exc.messages)})
 
-        user = CustomUser.objects.create_user(
+        CustomUser.objects.create_user(
             email=email,
             first_name=first_name,
             last_name=last_name,
             password=password,
-            is_student=True
+            is_student=True,
+            is_active=False,
+            is_authorized=False,
         )
-        login(request, user)
-        return redirect('student_list')
+        messages.success(request, 'Tu cuenta fue registrada y queda pendiente de aprobacion por un administrador.')
+        return redirect('iniciar_sesion')
     return render(request, 'autenticacion/registrarse.html')
 
 from django.conf import settings
 import requests
 
+
+PASSWORD_RESET_SENT_MESSAGE = (
+    'Si el correo pertenece a una cuenta registrada, enviaremos instrucciones para restablecer la contraseña.'
+)
+
+
+def limpiar_otp_pendiente(request):
+    request.session.pop('otp_user_id', None)
+    request.session.pop('otp_next', None)
+
+
+def ultimo_otp_pendiente(user):
+    return OTPVerificacion.objects.filter(user=user, usado=False).order_by('-creado_en').first()
+
+
 def login_view(request):
     # reCAPTCHA v2 integration: verify token server-side with Google's API
     if request.method == 'POST':
-        token = request.POST.get('g-recaptcha-response')
-        if not token:
-            return render(request, 'autenticacion/iniciar-sesion.html', {'error': 'Por favor completa el reCAPTCHA.', 'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+        recaptcha_context = {
+            'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
+            'recaptcha_enabled': settings.RECAPTCHA_VERIFY_ENABLED,
+        }
+        if settings.RECAPTCHA_VERIFY_ENABLED:
+            token = request.POST.get('g-recaptcha-response')
+            if not token:
+                return render(request, 'autenticacion/iniciar-sesion.html', {**recaptcha_context, 'error': 'Por favor completa el reCAPTCHA.'})
 
-        # Verify token with Google
-        try:
-            resp = requests.post('https://www.google.com/recaptcha/api/siteverify', data={
-                'secret': settings.RECAPTCHA_SECRET_KEY,
-                'response': token,
-                'remoteip': get_client_ip(request),
-            }, timeout=5)
-            result = resp.json()
-        except Exception:
-            return render(request, 'autenticacion/iniciar-sesion.html', {'error': 'Error verificando reCAPTCHA. Intenta nuevamente.', 'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+            try:
+                resp = requests.post('https://www.google.com/recaptcha/api/siteverify', data={
+                    'secret': settings.RECAPTCHA_SECRET_KEY,
+                    'response': token,
+                    'remoteip': get_client_ip(request),
+                }, timeout=settings.RECAPTCHA_VERIFY_TIMEOUT)
+                result = resp.json()
+            except Exception:
+                return render(request, 'autenticacion/iniciar-sesion.html', {**recaptcha_context, 'error': 'Error verificando reCAPTCHA. Intenta nuevamente.'})
 
-        if not result.get('success'):
-            return render(request, 'autenticacion/iniciar-sesion.html', {'error': 'reCAPTCHA no validado. Intentarlo de nuevo.', 'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+            if not result.get('success'):
+                return render(request, 'autenticacion/iniciar-sesion.html', {**recaptcha_context, 'error': 'reCAPTCHA no validado. Intentarlo de nuevo.'})
 
         email = request.POST.get('email')
         password = request.POST.get('password')
         existing_user = CustomUser.objects.filter(email=email).first()
         if existing_user and existing_user.is_locked:
-            return render(request, 'autenticacion/iniciar-sesion.html', {'error': 'Usuario bloqueado. Contacta al administrador.', 'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+            return render(request, 'autenticacion/iniciar-sesion.html', {**recaptcha_context, 'error': 'Usuario bloqueado. Contacta al administrador.', 'cuenta_bloqueada': True})
+        if existing_user and not existing_user.is_active:
+            return render(request, 'autenticacion/iniciar-sesion.html', {**recaptcha_context, 'error': 'Cuenta pendiente de aprobacion por un administrador.'})
 
         user = authenticate(request, username=email, password=password)
         if user is not None:
@@ -94,9 +119,9 @@ def login_view(request):
                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
             )
             otp = OTPVerificacion.objects.create(user=user)
-            otp.enviar_codigo()
             request.session['otp_user_id'] = user.pk
-            request.session['otp_next'] = 'student_list'
+            request.session['otp_next'] = 'index'
+            enqueue_otp_email(user.email, otp.codigo)
             return redirect('verificar_otp')
         else:
             if existing_user:
@@ -112,10 +137,13 @@ def login_view(request):
                 path=request.path,
                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
             )
-            return render(request, 'autenticacion/iniciar-sesion.html', {'error': 'Correo o contraseÃ±a invÃ¡lidos.', 'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+            return render(request, 'autenticacion/iniciar-sesion.html', {**recaptcha_context, 'error': 'Correo o contraseña invalidos.'})
 
     # GET -> render login with site key
-    return render(request, 'autenticacion/iniciar-sesion.html', {'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+    return render(request, 'autenticacion/iniciar-sesion.html', {
+        'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
+        'recaptcha_enabled': settings.RECAPTCHA_VERIFY_ENABLED,
+    })
 
 def forgot_password_view(request):
     if request.method == 'POST':
@@ -124,12 +152,13 @@ def forgot_password_view(request):
         if user:
             token = get_random_string(length=32)
             reset_request = PasswordResetRequest.objects.create(user=user, email=email, token=token)
-            reset_request.send_reset_email(request)
+            reset_link = request.build_absolute_uri(reverse('restablecer_contrasena', args=[reset_request.token]))
+            enqueue_reset_email(user.email, reset_link)
             
-            messages.success(request, 'Se enviÃ³ un enlace de recuperaciÃ³n a tu correo.')
+            messages.success(request, PASSWORD_RESET_SENT_MESSAGE)
             return redirect('recuperar_contrasena')
-        
-        messages.error(request, 'No existe un usuario con este correo.')
+
+        messages.success(request, PASSWORD_RESET_SENT_MESSAGE)
         return redirect('recuperar_contrasena')
     return render(request, 'autenticacion/recuperar-contrasena.html')
 
@@ -183,20 +212,32 @@ def verificar_otp_view(request):
 
     user = CustomUser.objects.filter(pk=pending_user_id, is_active=True, is_locked=False).first()
     if not user:
-        request.session.pop('otp_user_id', None)
-        request.session.pop('otp_next', None)
+        limpiar_otp_pendiente(request)
         messages.error(request, 'No se pudo verificar el usuario. Inicia sesion nuevamente.')
         return redirect('iniciar_sesion')
 
     if request.method == 'POST':
-        codigo = request.POST.get('codigo')
-        otp = OTPVerificacion.objects.filter(user=user, codigo=codigo, usado=False).first()
-        if otp and otp.es_valido:
+        codigo = (request.POST.get('codigo') or '').strip()
+        otp = ultimo_otp_pendiente(user)
+        if not otp or not otp.es_valido:
+            limpiar_otp_pendiente(request)
+            messages.error(request, 'El codigo expiro. Inicia sesion nuevamente para recibir uno nuevo.')
+            return redirect('iniciar_sesion')
+
+        if otp.intentos >= settings.OTP_MAX_ATTEMPTS:
+            user.is_locked = True
+            user.locked_at = timezone.now()
+            user.save(update_fields=['is_locked', 'locked_at'])
+            limpiar_otp_pendiente(request)
+            messages.error(request, 'Cuenta bloqueada por demasiados intentos de verificacion.')
+            return redirect('iniciar_sesion')
+
+        if otp.codigo == codigo:
             otp.usado = True
-            otp.save()
+            otp.save(update_fields=['usado'])
             login(request, user, backend='autenticacion.backends.EmailBackend')
             request.session.pop('otp_user_id', None)
-            next_url = request.session.pop('otp_next', 'student_list')
+            next_url = request.session.pop('otp_next', 'index')
             AccessLog.objects.create(
                 user=user,
                 email=user.email,
@@ -207,9 +248,21 @@ def verificar_otp_view(request):
             )
             messages.success(request, 'Codigo verificado correctamente.')
             return redirect(next_url)
+
+        otp.intentos += 1
+        otp.save(update_fields=['intentos'])
+        intentos_restantes = max(settings.OTP_MAX_ATTEMPTS - otp.intentos, 0)
+        if intentos_restantes == 0:
+            user.is_locked = True
+            user.locked_at = timezone.now()
+            user.save(update_fields=['is_locked', 'locked_at'])
+            limpiar_otp_pendiente(request)
+            messages.error(request, 'Cuenta bloqueada por demasiados intentos de verificacion.')
+            return redirect('iniciar_sesion')
+
         return render(request, 'autenticacion/verificar-otp.html', {
             'email': user.email,
-            'error': 'Codigo invalido o expirado.',
+            'error': f'Codigo invalido. Intentos restantes: {intentos_restantes}.',
         })
     return render(request, 'autenticacion/verificar-otp.html', {'email': user.email})
 
@@ -221,10 +274,19 @@ def reenviar_otp_view(request):
         messages.error(request, 'Inicia sesion para reenviar el codigo OTP.')
         return redirect('iniciar_sesion')
 
+    otp = ultimo_otp_pendiente(user)
+    if otp and otp.es_valido and otp.enviado_en:
+        transcurrido = (timezone.now() - otp.enviado_en).total_seconds()
+        if transcurrido < settings.OTP_RESEND_COOLDOWN_SECONDS:
+            espera = int(settings.OTP_RESEND_COOLDOWN_SECONDS - transcurrido)
+            messages.error(request, f'Espera {espera} segundos antes de reenviar otro codigo.')
+            return redirect('verificar_otp')
+
     otp = OTPVerificacion.objects.create(user=user)
     try:
         otp.enviar_codigo()
         messages.success(request, 'Se ha reenviado el codigo OTP a tu correo.')
     except Exception:
+        otp.delete()
         messages.error(request, 'Error al enviar el codigo OTP.')
     return redirect('verificar_otp')

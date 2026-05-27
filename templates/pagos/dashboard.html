@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Pagos{% endblock %}
+{% block titulo_pagina %}Pagos{% endblock %}
+{% block subtitulo_pagina %}Gestion financiera escolar{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-receipt"></i></div><div><div class="s-stat-valor">{{ total_payments }}</div><div class="s-stat-label">Pagos</div></div></div></div>
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-check"></i></div><div><div class="s-stat-valor">{{ paid_count }}</div><div class="s-stat-label">Solventes</div></div></div></div>
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-clock"></i></div><div><div class="s-stat-valor">{{ pending_count }}</div><div class="s-stat-label">Pendientes</div></div></div></div>
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono turquesa"><i class="fas fa-wallet"></i></div><div><div class="s-stat-valor">{{ total_debt }}</div><div class="s-stat-label">Deuda</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Acciones financieras</h5></div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'payment_create' %}" class="s-btn s-btn-primario"><i class="fas fa-plus"></i> Registrar pago</a>
+                <a href="{% url 'payment_list' %}" class="s-btn s-btn-secundario"><i class="fas fa-list"></i> Historial</a>
+                <a href="{% url 'payment_list' %}?estado=pendiente" class="s-btn s-btn-secundario"><i class="fas fa-clock"></i> Pendientes</a>
+                <a href="{% url 'solvent_students' %}" class="s-btn s-btn-secundario"><i class="fas fa-check-circle"></i> Solventes</a>
+                <a href="{% url 'delinquent_students' %}" class="s-btn s-btn-secundario"><i class="fas fa-exclamation-triangle"></i> Morosos</a>
+                <a href="{% url 'payment_config_list' %}" class="s-btn s-btn-secundario"><i class="fas fa-cog"></i> Configuracion</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Pagos recientes</h5></div>
+            {% include 'pagos/_payment_table.html' with payments=recent_payments %}
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Proximos vencimientos</h5></div>
+            {% include 'pagos/_payment_table.html' with payments=upcoming_payments %}
+        </div>
+    </div>
+</div>
+{% endblock %}

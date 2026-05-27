@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Detalle de pago{% endblock %}
+{% block titulo_pagina %}Detalle de pago{% endblock %}
+{% block subtitulo_pagina %}Comprobante y estado financiero{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo">{{ payment.concept }}</h5>
+        <div class="d-flex gap-2">
+            {% if user.is_admin %}<a href="{% url 'payment_edit' payment.pk %}" class="s-btn s-btn-secundario"><i class="fas fa-pen"></i> Editar</a>{% endif %}
+            {% if user.is_representative and payment.balance > 0 %}<a href="{% url 'representative_pay' payment.pk %}" class="s-btn s-btn-primario"><i class="fas fa-wallet"></i> Pagar</a>{% endif %}
+            <a href="{% url 'payment_receipt_pdf' payment.pk %}" class="s-btn s-btn-exito"><i class="fas fa-download"></i> PDF</a>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6"><strong>Estudiante:</strong> {{ payment.student.first_name }} {{ payment.student.last_name }}</div>
+        <div class="col-md-6"><strong>Representante:</strong> {{ payment.representative_name }}</div>
+        <div class="col-md-6"><strong>Fecha limite:</strong> {{ payment.due_date|date:"d/m/Y" }}</div>
+        <div class="col-md-6"><strong>Fecha de pago:</strong> {{ payment.payment_date|date:"d/m/Y"|default:"-" }}</div>
+        <div class="col-md-6"><strong>Monto pagado:</strong> {{ payment.amount_paid }}</div>
+        <div class="col-md-6"><strong>Saldo pendiente:</strong> {{ payment.balance }}</div>
+        <div class="col-md-6"><strong>Estado:</strong> {{ payment.get_status_display }}</div>
+        <div class="col-md-6"><strong>Referencia:</strong> {{ payment.reference|default:"-" }}</div>
+    </div>
+</div>
+{% endblock %}

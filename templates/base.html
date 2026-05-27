@@ -49,6 +49,9 @@
                     {% if user.is_teacher %}
                     <a href="{% url 'teacher_dashboard' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Profesor</a>
                     {% endif %}
+                    {% if user.is_representative %}
+                    <a href="{% url 'representative_dashboard' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Representante</a>
+                    {% endif %}
                     {% if user.is_student %}
                     <a href="{% url 'student_dashboard' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Estudiante</a>
                     {% endif %}
@@ -93,6 +96,23 @@
                     {% endif %}
                 </div>
             </div>
+
+            {% if user.is_admin or user.is_representative %}
+            <div class="sidebar-grupo">
+                <button class="sidebar-link sidebar-toggle" data-target="sub-pagos">
+                    <i class="fas fa-wallet sidebar-icon"></i><span>Pagos</span>
+                    <i class="fas fa-chevron-right sidebar-arrow"></i>
+                </button>
+                <div class="sidebar-sub" id="sub-pagos">
+                    <a href="{% url 'payment_dashboard' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Panel de Pagos</a>
+                    <a href="{% url 'payment_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Historial</a>
+                    {% if user.is_admin %}
+                    <a href="{% url 'payment_create' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Registrar Pago</a>
+                    <a href="{% url 'payment_config_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Configuracion</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
             {% if user.is_admin or user.is_teacher %}
             <div class="sidebar-grupo">
@@ -151,7 +171,7 @@
             <div class="sidebar-usuario-info">
                 <span class="sidebar-usuario-nombre">{{ user.get_full_name|default:user.email }}</span>
                 <span class="sidebar-usuario-rol">
-                    {% if user.is_admin %}Administrador{% elif user.is_teacher %}Profesor{% elif user.is_student %}Estudiante{% endif %}
+                    {% if user.is_admin %}Administrador{% elif user.is_teacher %}Profesor{% elif user.is_representative %}Representante{% elif user.is_student %}Estudiante{% endif %}
                 </span>
             </div>
             <a href="{% url 'logout' %}" class="sidebar-logout" title="Cerrar sesión">

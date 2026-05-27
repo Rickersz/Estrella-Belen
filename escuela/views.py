@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.db.models import Sum
 from autenticacion.models import CustomUser
 from .forms import UserCreationForm, UserEditForm
 from escuela import context_processors
@@ -12,6 +13,8 @@ from estudiante.models import Student
 from profesor.models import Teacher
 from materia.models import Subject
 from bitacora.models import AccessLog
+from pagos.models import Payment
+from escuela.models import ClassTeacherAssignment
 
 
 def get_admin_dashboard_context(extra_context=None):
@@ -20,8 +23,12 @@ def get_admin_dashboard_context(extra_context=None):
         'teachers_count': Teacher.objects.count(),
         'subjects_count': Subject.objects.count(),
         'access_logs_count': AccessLog.objects.count(),
+        'pending_payments_count': Payment.objects.filter(status__in=[Payment.STATUS_PENDING, Payment.STATUS_PARTIAL, Payment.STATUS_OVERDUE]).count(),
+        'overdue_payments_count': Payment.objects.filter(status=Payment.STATUS_OVERDUE).count(),
+        'payments_debt': Payment.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or 0,
         'recent_students': Student.objects.select_related('parent').order_by('-id')[:8],
         'recent_access_logs': AccessLog.objects.select_related('user').order_by('-created_at')[:8],
+        'recent_payments': Payment.objects.select_related('student', 'representative').order_by('-updated_at')[:8],
     }
     if extra_context:
         context.update(extra_context)
@@ -41,6 +48,8 @@ def index(request):
             return render(request, 'profesor/panel-profesor.html', {'dashboards': dashboards})
         elif dash == 'student_dashboard':
             return render(request, 'estudiante/panel-estudiante.html', {'dashboards': dashboards})
+        elif dash == 'representative_dashboard':
+            return representative_dashboard(request)
     else:
         return redirect('iniciar_sesion')  # No valid role found, redirect to login
 
@@ -51,6 +60,8 @@ def is_teacher(user):
     return hasattr(user, 'is_teacher') and user.is_teacher
 def is_student(user):
     return hasattr(user, 'is_student') and user.is_student
+def is_representative(user):
+    return hasattr(user, 'is_representative') and user.is_representative
 
 
 #region dashboard views
@@ -63,12 +74,36 @@ def admin_dashboard(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_teacher, login_url='iniciar_sesion')
 def teacher_dashboard(request):
-    return render(request, 'profesor/panel-profesor.html')
+    teacher = Teacher.objects.filter(email__iexact=request.user.email).first()
+    assignments = ClassTeacherAssignment.objects.select_related('class_assigned', 'subject').filter(teacher=teacher, is_active=True) if teacher else ClassTeacherAssignment.objects.none()
+    sections = [assignment.class_assigned for assignment in assignments]
+    students = Student.objects.filter(section__in=[section.section for section in sections]).select_related('parent') if sections else Student.objects.none()
+    return render(request, 'profesor/panel-profesor.html', {
+        'teacher': teacher,
+        'assignments': assignments,
+        'students': students[:12],
+        'sections_count': len(sections),
+        'students_count': students.count(),
+    })
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_student, login_url='iniciar_sesion')
 def student_dashboard(request):
     return render(request, 'estudiante/panel-estudiante.html')
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_representative, login_url='iniciar_sesion')
+def representative_dashboard(request):
+    parent = getattr(request.user, 'representante', None)
+    students = parent.student_set.all() if parent else Student.objects.none()
+    payments = Payment.objects.filter(representative=parent).select_related('student') if parent else Payment.objects.none()
+    return render(request, 'representante/panel-representante.html', {
+        'parent': parent,
+        'students': students,
+        'payments': payments[:8],
+        'pending_payments': payments.filter(balance__gt=0),
+        'debt': payments.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or 0,
+    })
 #endregion
 
 

@@ -8,7 +8,7 @@ class UserCreationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}), label='Confirm Password')
     class Meta:
         model = CustomUser
-        fields = ['email', 'first_name', 'last_name', 'password', 'confirm_password', 'is_admin', 'is_student', 'is_teacher', 'is_active']
+        fields = ['email', 'first_name', 'last_name', 'password', 'confirm_password', 'is_admin', 'is_student', 'is_teacher', 'is_representative', 'is_active']
         widgets = {
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -46,7 +46,7 @@ class UserCreationForm(forms.ModelForm):
 class UserEditForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['email', 'first_name', 'last_name', 'is_admin', 'is_student', 'is_teacher', 'is_active']
+        fields = ['email', 'first_name', 'last_name', 'is_admin', 'is_student', 'is_teacher', 'is_representative', 'is_active']
         widgets = {
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),

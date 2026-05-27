@@ -31,6 +31,8 @@ SECRET_KEY = os.getenv('SECRET_KEY','django-insecure-dev-only-123456789')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+RECAPTCHA_VERIFY_ENABLED = os.getenv('RECAPTCHA_VERIFY_ENABLED', 'True').lower() in ('true', '1', 'yes')
+RECAPTCHA_VERIFY_TIMEOUT = float(os.getenv('RECAPTCHA_VERIFY_TIMEOUT', '1.5'))
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
 
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     'profesor',
     'reportes',
     'bitacora',
+    'pagos',
 ]
 
 MIDDLEWARE = [
@@ -115,6 +118,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+PASSWORD_HASHERS = [
+    'autenticacion.hashers.FastPBKDF2PasswordHasher',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -150,12 +157,16 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Email Configuration
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', '')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'webmaster@localhost')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '10'))
+
+OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', '5'))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', '60'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'    # default type for primary keys in models

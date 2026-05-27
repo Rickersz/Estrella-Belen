@@ -23,8 +23,8 @@
 
         <!-- Icono y título -->
         <div style="text-align:center;margin-bottom:28px">
-          <div style="width:70px;height:70px;border-radius:50%;background:rgba(125,199,246,0.1);border:2px solid rgba(125,199,246,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;color:#7DC7F6">
-            <i class="fas fa-shield-alt"></i>
+          <div style="width:86px;height:86px;border-radius:24px;background:rgba(255,255,255,0.04);border:1px solid rgba(125,199,246,0.22);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;padding:8px">
+            <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belen" style="width:100%;height:100%;object-fit:contain">
           </div>
           <h1 class="login-form-title" style="font-size:1.5rem">Verificación en 2 pasos</h1>
           <p class="login-form-subtitle">
@@ -37,6 +37,14 @@
         <div class="login-alert">
           <i class="fas fa-exclamation-circle"></i> {{ error }}
         </div>
+        {% endif %}
+
+        {% if messages %}
+          {% for message in messages %}
+          <div class="login-alert" style="border-left-color:#7DC7F6;background:rgba(125,199,246,0.08);color:#e2f4ff">
+            <i class="fas fa-info-circle"></i> {{ message }}
+          </div>
+          {% endfor %}
         {% endif %}
 
         <form action="{% url 'verificar_otp' %}" method="post" id="otpForm">
@@ -147,7 +155,11 @@ document.getElementById('otpForm').addEventListener('submit', function(e) {
   if (hidden.value.length !== 6) {
     e.preventDefault();
     alert('Por favor ingresa el código completo de 6 dígitos.');
+    return;
   }
+  const btn = document.getElementById('btnVerificar');
+  btn.innerHTML = '<span><i class="fas fa-spinner fa-spin me-2"></i>Verificando...</span>';
+  btn.disabled = true;
 });
 
 // Temporizador 10 minutos

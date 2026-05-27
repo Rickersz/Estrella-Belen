@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Configuracion de pagos{% endblock %}
+{% block titulo_pagina %}Configuracion de pagos{% endblock %}
+{% block subtitulo_pagina %}Fechas, montos y dias permitidos{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo">Configuraciones</h5>
+        <a href="{% url 'payment_config_create' %}" class="s-btn s-btn-primario"><i class="fas fa-plus"></i> Nueva</a>
+    </div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla"><thead><tr><th>Nombre</th><th>Ano escolar</th><th>Monto</th><th>Dia limite</th><th>Dias permitidos</th><th>Activa</th></tr></thead><tbody>
+            {% for config in configs %}
+            <tr><td>{{ config.name }}</td><td>{{ config.academic_year }}</td><td>{{ config.amount }}</td><td>{{ config.due_day }}</td><td>{{ config.allowed_days }}</td><td>{{ config.is_active|yesno:"Si,No" }}</td></tr>
+            {% empty %}<tr><td colspan="6" style="text-align:center;padding:30px">Sin configuraciones</td></tr>{% endfor %}
+        </tbody></table>
+    </div>
+</div>
+{% endblock %}

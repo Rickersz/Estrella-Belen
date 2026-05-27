@@ -51,6 +51,7 @@ class CustomUser(AbstractUser):
     is_admin = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
     is_teacher = models.BooleanField(default=False)
+    is_representative = models.BooleanField(default=False)
 
     # Bloqueo por intentos fallidos
     failed_login_attempts = models.IntegerField(default=0)
@@ -97,8 +98,12 @@ class PasswordResetRequest(models.Model):
         endpoint =  reverse('restablecer_contrasena', args=[self.token])
         reset_link = base_url + endpoint
         send_mail(
-            "Password Reset Request",
-            f"Click the following link to reset your password: \n{reset_link}",
+            "Restablecer contraseña - Estrella de Belen",
+            (
+                "Recibimos una solicitud para restablecer tu contraseña.\n\n"
+                f"Abre este enlace para crear una nueva contraseña:\n{reset_link}\n\n"
+                "Este enlace es valido por 15 minutos. Si no solicitaste este cambio, ignora este mensaje."
+            ),
             settings.DEFAULT_FROM_EMAIL,
             [self.email],
             fail_silently=False,
@@ -111,6 +116,8 @@ class OTPVerificacion(models.Model):
     codigo     = models.CharField(max_length=6, default=generate_otp)
     creado_en  = models.DateTimeField(auto_now_add=True)
     usado      = models.BooleanField(default=False)
+    intentos   = models.PositiveSmallIntegerField(default=0)
+    enviado_en = models.DateTimeField(auto_now_add=True)
 
     VALIDEZ = timezone.timedelta(minutes=10)
 
@@ -119,17 +126,20 @@ class OTPVerificacion(models.Model):
         return not self.usado and timezone.now() <= self.creado_en + self.VALIDEZ
 
     def enviar_codigo(self):
-        send_mail(
-            subject='Código de verificación - Estrella de Belén',
+        enviados = send_mail(
+            subject='Codigo de verificacion - Estrella de Belen',
             message=(
-                f'Tu código de verificación es: {self.codigo}\n\n'
-                f'Este código es válido por 10 minutos.\n'
-                f'Si no solicitaste este código, ignora este mensaje.'
+                f'Tu codigo de verificacion es: {self.codigo}\n\n'
+                f'Este codigo es valido por 10 minutos.\n'
+                f'Si no solicitaste este codigo, ignora este mensaje.'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[self.user.email],
-            fail_silently=True,
+            fail_silently=False,
         )
+        self.enviado_en = timezone.now()
+        self.save(update_fields=['enviado_en'])
+        return enviados
 
     def __str__(self):
         return f"OTP {self.codigo} para {self.user.email}"

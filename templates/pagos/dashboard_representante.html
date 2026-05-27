@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mis pagos{% endblock %}
+{% block titulo_pagina %}Panel del Representante{% endblock %}
+{% block subtitulo_pagina %}Estado financiero y alertas{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-check-circle"></i></div><div><div class="s-stat-valor">{{ paid_count }}</div><div class="s-stat-label">Pagados</div></div></div></div>
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-clock"></i></div><div><div class="s-stat-valor">{{ pending_count }}</div><div class="s-stat-label">Pendientes</div></div></div></div>
+    <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-wallet"></i></div><div><div class="s-stat-valor">{{ total_debt }}</div><div class="s-stat-label">Deuda</div></div></div></div>
+</div>
+<div class="s-card">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo">Pagos de mis estudiantes</h5>
+        <a href="{% url 'payment_list' %}" class="s-btn s-btn-secundario">Ver historial</a>
+    </div>
+    {% include 'pagos/_payment_table.html' with payments=upcoming_payments %}
+</div>
+{% endblock %}
