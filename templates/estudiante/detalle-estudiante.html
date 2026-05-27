@@ -49,7 +49,7 @@
           <div class="col-md-6"><strong>Cédula:</strong> {{ student.cedula|default:"No registrada" }}</div>
           <div class="col-md-6"><strong>Género:</strong> {{ student.gender|default:"-" }}</div>
           <div class="col-md-6"><strong>Fecha de nacimiento:</strong> {{ student.date_of_birth|default:"-" }}</div>
-          <div class="col-md-6"><strong>Edad:</strong> {{ student.edad|default:"-" }}</div>
+          <div class="col-md-6"><strong>Edad:</strong> {{ student.edad_actual }} años</div>
           <div class="col-md-6"><strong>Nacionalidad:</strong> {{ student.nacionalidad|default:"-" }}</div>
           <div class="col-md-6"><strong>Estado natal:</strong> {{ student.estado_natal|default:"-" }}</div>
           <div class="col-12"><strong>Dirección:</strong> {{ student.direccion_completa|default:"-" }}</div>
@@ -91,6 +91,60 @@
         {% else %}
         <span style="color:var(--s-suave)">Sin representante registrado.</span>
         {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="s-card h-100">
+      <div class="s-card-header">
+        <h5 class="s-card-titulo"><i class="fas fa-history me-2" style="color:var(--s-azul)"></i>Historial de inscripción</h5>
+      </div>
+      <div class="s-tabla-wrap">
+        <table class="s-tabla">
+          <thead><tr><th>Año</th><th>Grado</th><th>Estado</th></tr></thead>
+          <tbody>
+            {% for enrollment in enrollments %}
+            <tr><td>{{ enrollment.academic_year }}</td><td>{{ enrollment.etapa }} / {{ enrollment.grado }} {{ enrollment.section }}</td><td><span class="s-badge s-badge-azul">{{ enrollment.get_result_status_display }}</span></td></tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--s-suave)">Sin historial</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="s-card h-100">
+      <div class="s-card-header">
+        <h5 class="s-card-titulo"><i class="fas fa-folder-open me-2" style="color:var(--s-azul)"></i>Documentos y salud</h5>
+        {% if user.is_admin or user.is_teacher %}
+        <div class="d-flex gap-2">
+          <a href="{% url 'student_documents' student.slug %}" class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-folder"></i> Documentos</a>
+          <a href="{% url 'student_health' student.slug %}" class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-heartbeat"></i> Salud</a>
+        </div>
+        {% endif %}
+      </div>
+      <div class="p-4">
+        <div class="mb-3"><strong>Documentos:</strong>
+          {% if documents %}
+            {% if documents.birth_certificate %}<span class="s-badge s-badge-verde">Partida</span>{% endif %}
+            {% if documents.vaccination_card %}<span class="s-badge s-badge-verde">Vacunas</span>{% endif %}
+            {% if documents.medical_report %}<span class="s-badge s-badge-verde">Informe médico</span>{% endif %}
+            {% if not documents.birth_certificate and not documents.vaccination_card and not documents.medical_report %}<span class="text-muted">Checklist pendiente</span>{% endif %}
+          {% else %}
+          <span class="text-muted">Sin checklist</span>
+          {% endif %}
+        </div>
+        <div><strong>Emergencia:</strong>
+          {% if health_record %}
+          {{ health_record.emergency_contact_name|default:"-" }} {{ health_record.emergency_contact_phone|default:"" }}
+          {% else %}
+          <span class="text-muted">Sin ficha médica</span>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>

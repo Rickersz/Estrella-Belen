@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Portal de Padres{% endblock %}
+{% block titulo_pagina %}Portal de Padres{% endblock %}
+{% block subtitulo_pagina %}Accesos, invitaciones y estudiantes asociados{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-user-friends"></i></div><div><div class="s-stat-valor">{{ total_parents }}</div><div class="s-stat-label">Representantes</div></div></div></div>
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-check"></i></div><div><div class="s-stat-valor">{{ with_user }}</div><div class="s-stat-label">Con acceso</div></div></div></div>
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-user-clock"></i></div><div><div class="s-stat-valor">{{ pending_invitations }}</div><div class="s-stat-label">Invitaciones</div></div></div></div>
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono turquesa"><i class="fas fa-user-plus"></i></div><div><div class="s-stat-valor">{{ without_user }}</div><div class="s-stat-label">Sin acceso</div></div></div></div>
+</div>
+
+<div class="s-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-7"><label class="form-label">Buscar</label><input class="form-control" name="q" value="{{ query }}" placeholder="Representante, estudiante, cedula o correo"></div>
+        <div class="col-md-3"><label class="form-label">Estado</label><select class="form-control" name="estado"><option value="">Todos</option><option value="sin_usuario" {% if status == 'sin_usuario' %}selected{% endif %}>Sin acceso</option><option value="invitado" {% if status == 'invitado' %}selected{% endif %}>Invitado</option><option value="activo" {% if status == 'activo' %}selected{% endif %}>Activo</option><option value="bloqueado" {% if status == 'bloqueado' %}selected{% endif %}>Bloqueado</option></select></div>
+        <div class="col-md-2"><button class="s-btn s-btn-primario w-100" type="submit"><i class="fas fa-search"></i> Filtrar</button></div>
+    </form>
+</div>
+
+<div class="s-card">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo">Representantes</h5>
+    </div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead>
+                <tr>
+                    <th>Representante</th>
+                    <th>Contacto</th>
+                    <th>Estudiantes</th>
+                    <th>Acceso</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for parent in parents %}
+                <tr>
+                    <td>
+                        <strong>{{ parent.father_name|default:parent.mother_name }}</strong>
+                        <div class="text-muted small">{{ parent.cedula_padre|default:"Sin cedula" }}</div>
+                    </td>
+                    <td>
+                        {{ parent.father_email|default:parent.mother_email|default:"Sin correo" }}
+                        <div class="text-muted small">{{ parent.father_mobile|default:parent.mother_mobile|default:"Sin telefono" }}</div>
+                    </td>
+                    <td>
+                        {% for student in parent.student_set.all %}
+                        <span class="s-badge s-badge-azul">{{ student.first_name }} {{ student.last_name }}</span>
+                        {% empty %}
+                        <span class="text-muted">Sin estudiantes</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if parent.user %}
+                            {% if parent.user.is_locked %}
+                            <span class="s-badge s-badge-dorado">Bloqueado</span>
+                            {% elif parent.user.is_active %}
+                            <span class="s-badge s-badge-verde">Activo</span>
+                            {% else %}
+                            <span class="s-badge s-badge-dorado">Invitado</span>
+                            {% endif %}
+                            <div class="text-muted small">{{ parent.user.email }}</div>
+                        {% else %}
+                            <span class="s-badge s-badge-dorado">Sin acceso</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end flex-wrap gap-1">
+                            <a href="{% url 'representative_access' parent.pk %}" class="s-btn s-btn-primario" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-key"></i> Acceso</a>
+                            {% if parent.user %}
+                            <form method="post" action="{% url 'resend_representative_invitation' parent.pk %}">{% csrf_token %}<button class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem" type="submit"><i class="fas fa-paper-plane"></i></button></form>
+                            <form method="post" action="{% url 'toggle_representative_access' parent.pk %}">{% csrf_token %}<button class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem" type="submit"><i class="fas fa-lock{% if parent.user.is_locked %}-open{% endif %}"></i></button></form>
+                            <form method="post" action="{% url 'unlink_representative_access' parent.pk %}">{% csrf_token %}<button class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem" type="submit"><i class="fas fa-unlink"></i></button></form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;color:var(--s-suave);padding:30px">No hay representantes para mostrar</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

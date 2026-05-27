@@ -51,3 +51,7 @@ def enqueue_reset_email(recipient, reset_link):
         ),
         recipient,
     ))
+
+
+def enqueue_generic_email(subject, message, recipient):
+    _email_queue.put((subject, message, recipient))

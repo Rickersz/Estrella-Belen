@@ -110,6 +110,39 @@ class PasswordResetRequest(models.Model):
         )
 
 
+class AccessRequest(models.Model):
+    STATUS_PENDING = 'pendiente'
+    STATUS_REVIEWED = 'revisada'
+    STATUS_APPROVED = 'aprobada'
+    STATUS_REJECTED = 'rechazada'
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pendiente'),
+        (STATUS_REVIEWED, 'Revisada'),
+        (STATUS_APPROVED, 'Aprobada'),
+        (STATUS_REJECTED, 'Rechazada'),
+    ]
+
+    full_name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40, blank=True)
+    document_id = models.CharField(max_length=30, blank=True)
+    student_name = models.CharField(max_length=120)
+    student_grade = models.CharField(max_length=80, blank=True)
+    relationship = models.CharField(max_length=60, default='Representante')
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    reviewed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='access_requests_reviewed')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.full_name} - {self.student_name} - {self.get_status_display()}'
+
+
 class OTPVerificacion(models.Model):
     """Código OTP de un solo uso para 2FA (ítem 15)."""
     user       = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

@@ -19,6 +19,10 @@
                 <div style="padding:12px;border-bottom:1px solid var(--s-borde)">
                     <strong>{{ student.first_name }} {{ student.last_name }}</strong><br>
                     <span style="color:var(--s-suave)">Grado: {{ student.grado|default:"-" }} | Seccion: {{ student.section }}</span>
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        <a href="{% url 'academic_history_student' student.pk %}" class="s-btn s-btn-secundario" style="padding:5px 10px;font-size:0.75rem">Historial</a>
+                        <a href="{% url 'report_card_pdf' student.pk %}" class="s-btn s-btn-exito" style="padding:5px 10px;font-size:0.75rem">Boletin PDF</a>
+                    </div>
                 </div>
             {% empty %}
                 <div style="padding:30px;text-align:center;color:var(--s-suave)">No hay estudiantes asociados</div>

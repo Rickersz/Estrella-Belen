@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block titulo %}Estadisticas{% endblock %}
+{% block titulo_pagina %}Estadisticas academicas{% endblock %}
+{% block subtitulo_pagina %}Promedios por materia y lapso{% endblock %}
+{% block contenido %}
+<div class="row g-3">
+  <div class="col-lg-6"><div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Por materia</h5></div><div class="s-tabla-wrap"><table class="s-tabla"><thead><tr><th>Materia</th><th>Promedio</th><th>Registros</th></tr></thead><tbody>{% for row in by_subject %}<tr><td>{{ row.subject__name }}</td><td>{{ row.avg|floatformat:2 }}</td><td>{{ row.total }}</td></tr>{% empty %}<tr><td colspan="3" style="text-align:center;padding:30px">Sin datos</td></tr>{% endfor %}</tbody></table></div></div></div>
+  <div class="col-lg-6"><div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Por lapso</h5></div><div class="s-tabla-wrap"><table class="s-tabla"><thead><tr><th>Lapso</th><th>Promedio</th><th>Registros</th></tr></thead><tbody>{% for row in by_period %}<tr><td>{{ row.period }}</td><td>{{ row.avg|floatformat:2 }}</td><td>{{ row.total }}</td></tr>{% empty %}<tr><td colspan="3" style="text-align:center;padding:30px">Sin datos</td></tr>{% endfor %}</tbody></table></div></div></div>
+</div>
+{% endblock %}

@@ -68,6 +68,12 @@
                     {% if user.is_admin or user.is_teacher %}
                     <a href="{% url 'add_student' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Inscribir Estudiante</a>
                     {% endif %}
+                    {% if user.is_admin %}
+                    <a href="{% url 'school_operations_dashboard' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Gestion Escolar</a>
+                    <a href="{% url 'attendance_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Asistencia</a>
+                    <a href="{% url 'capacity_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Cupos</a>
+                    <a href="{% url 'school_year_closure' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Cierre Anual</a>
+                    {% endif %}
                 </div>
             </div>
 
@@ -97,6 +103,24 @@
                 </div>
             </div>
 
+            {% if user.is_admin or user.is_teacher or user.is_representative %}
+            <div class="sidebar-grupo">
+                <button class="sidebar-link sidebar-toggle" data-target="sub-academico">
+                    <i class="fas fa-graduation-cap sidebar-icon"></i><span>Academico</span>
+                    <i class="fas fa-chevron-right sidebar-arrow"></i>
+                </button>
+                <div class="sidebar-sub" id="sub-academico">
+                    <a href="{% url 'academic_dashboard' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Panel Academico</a>
+                    <a href="{% url 'grade_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Notas</a>
+                    <a href="{% url 'academic_history' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Historial</a>
+                    <a href="{% url 'schedule_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Horario</a>
+                    <a href="{% url 'calendar_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Calendario</a>
+                    <a href="{% url 'announcement_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Anuncios</a>
+                    <a href="{% url 'message_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Comunicacion</a>
+                </div>
+            </div>
+            {% endif %}
+
             {% if user.is_admin or user.is_representative %}
             <div class="sidebar-grupo">
                 <button class="sidebar-link sidebar-toggle" data-target="sub-pagos">
@@ -108,6 +132,7 @@
                     <a href="{% url 'payment_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Historial</a>
                     {% if user.is_admin %}
                     <a href="{% url 'payment_create' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Registrar Pago</a>
+                    <a href="{% url 'generate_recurring_payments' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Generar Mensualidad</a>
                     <a href="{% url 'payment_config_list' %}" class="sidebar-sublink"><i class="fas fa-circle-dot"></i> Configuracion</a>
                     {% endif %}
                 </div>
@@ -157,6 +182,15 @@
             <div class="sidebar-seccion-label">Administración</div>
             <a href="{% url 'user_management' %}" class="sidebar-link">
                 <i class="fas fa-users-cog sidebar-icon"></i><span>Gestión de Usuarios</span>
+            </a>
+            <a href="{% url 'representative_management' %}" class="sidebar-link">
+                <i class="fas fa-user-friends sidebar-icon"></i><span>Representantes</span>
+            </a>
+            <a href="{% url 'access_request_list' %}" class="sidebar-link">
+                <i class="fas fa-inbox sidebar-icon"></i><span>Solicitudes de Acceso</span>
+            </a>
+            <a href="{% url 'system_configuration' %}" class="sidebar-link">
+                <i class="fas fa-sliders-h sidebar-icon"></i><span>Configuracion</span>
             </a>
             <a href="{% url 'reportes_home' %}" class="sidebar-link">
                 <i class="fas fa-file-alt sidebar-icon"></i><span>Reportes</span>

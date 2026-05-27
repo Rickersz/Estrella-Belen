@@ -2,7 +2,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.utils.crypto import get_random_string
 from django.contrib import messages
-from .models import CustomUser, PasswordResetRequest, OTPVerificacion
+from .models import AccessRequest, CustomUser, PasswordResetRequest, OTPVerificacion
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -20,36 +20,38 @@ def get_client_ip(request):
 
 def signup_view(request):
     if request.method == 'POST':
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
+        full_name = request.POST.get('full_name', '').strip()
         email = request.POST.get('email', '').strip().lower()
-        password = request.POST.get('password', '')
-        confirm_password = request.POST.get('confirm_password', '')
+        phone = request.POST.get('phone', '').strip()
+        document_id = request.POST.get('document_id', '').strip()
+        student_name = request.POST.get('student_name', '').strip()
+        student_grade = request.POST.get('student_grade', '').strip()
+        relationship = request.POST.get('relationship', '').strip() or 'Representante'
+        message = request.POST.get('message', '').strip()
         
-        if not first_name or not last_name or not email or not password:
-            return render(request, 'autenticacion/registrarse.html', {'error': 'Completa todos los campos obligatorios.'})
+        if not full_name or not email or not phone or not student_name:
+            return render(request, 'autenticacion/registrarse.html', {'error': 'Completa nombre, correo, telefono y estudiante.'})
 
         if CustomUser.objects.filter(email=email).exists():
-            return render(request, 'autenticacion/registrarse.html', {'error': 'Este correo ya estÃ¡ registrado. Usa otro correo o inicia sesiÃ³n.'})
+            messages.info(request, 'Ese correo ya tiene una cuenta. Usa iniciar sesion o recupera tu contraseña.')
+            return redirect('iniciar_sesion')
 
-        if password != confirm_password:
-            return render(request, 'autenticacion/registrarse.html', {'error': 'Las contraseÃ±as no coinciden.'})
+        pending = AccessRequest.objects.filter(email=email, status=AccessRequest.STATUS_PENDING).exists()
+        if pending:
+            messages.info(request, 'Ya existe una solicitud pendiente para ese correo. Administracion la revisara pronto.')
+            return redirect('iniciar_sesion')
 
-        try:
-            validate_password(password)
-        except ValidationError as exc:
-            return render(request, 'autenticacion/registrarse.html', {'error': ' '.join(exc.messages)})
-
-        CustomUser.objects.create_user(
+        AccessRequest.objects.create(
+            full_name=full_name,
             email=email,
-            first_name=first_name,
-            last_name=last_name,
-            password=password,
-            is_student=True,
-            is_active=False,
-            is_authorized=False,
+            phone=phone,
+            document_id=document_id,
+            student_name=student_name,
+            student_grade=student_grade,
+            relationship=relationship,
+            message=message,
         )
-        messages.success(request, 'Tu cuenta fue registrada y queda pendiente de aprobacion por un administrador.')
+        messages.success(request, 'Solicitud enviada. Administracion verificara los datos y enviara una invitacion si corresponde.')
         return redirect('iniciar_sesion')
     return render(request, 'autenticacion/registrarse.html')
 
@@ -60,6 +62,17 @@ import requests
 PASSWORD_RESET_SENT_MESSAGE = (
     'Si el correo pertenece a una cuenta registrada, enviaremos instrucciones para restablecer la contraseña.'
 )
+
+
+def csrf_failure(request, reason=''):
+    messages.error(
+        request,
+        'La sesion del formulario vencio o fue abierta antes de iniciar sesion. Recarga la pagina e intenta nuevamente.'
+    )
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('iniciar_sesion')
 
 
 def limpiar_otp_pendiente(request):
@@ -283,10 +296,8 @@ def reenviar_otp_view(request):
             return redirect('verificar_otp')
 
     otp = OTPVerificacion.objects.create(user=user)
-    try:
-        otp.enviar_codigo()
-        messages.success(request, 'Se ha reenviado el codigo OTP a tu correo.')
-    except Exception:
-        otp.delete()
-        messages.error(request, 'Error al enviar el codigo OTP.')
+    otp.enviado_en = timezone.now()
+    otp.save(update_fields=['enviado_en'])
+    enqueue_otp_email(user.email, otp.codigo)
+    messages.success(request, 'Se ha reenviado el codigo OTP a tu correo.')
     return redirect('verificar_otp')

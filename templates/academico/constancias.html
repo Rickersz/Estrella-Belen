@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block titulo %}Constancias{% endblock %}
+{% block titulo_pagina %}Constancias{% endblock %}
+{% block subtitulo_pagina %}Generacion de documentos academicos{% endblock %}
+{% block contenido %}
+<div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Estudiantes disponibles</h5></div>
+{% for student in students %}<div style="padding:14px;border-bottom:1px solid var(--s-borde);display:flex;justify-content:space-between;gap:12px;align-items:center"><span>{{ student.first_name }} {{ student.last_name }} - {{ student.student_id }}</span><a href="{% url 'report_card_pdf' student.pk %}" class="s-btn s-btn-exito">Boletin PDF</a></div>{% empty %}<div style="padding:30px;text-align:center">Sin estudiantes asociados</div>{% endfor %}</div>
+{% endblock %}

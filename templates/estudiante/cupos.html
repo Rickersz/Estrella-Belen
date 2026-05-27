@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Cupos{% endblock %}
+{% block titulo_pagina %}Cupos por grado y sección{% endblock %}
+{% block subtitulo_pagina %}Control de capacidad escolar{% endblock %}
+
+{% block contenido %}
+<div class="s-card mb-4">
+  <form method="post" class="row g-3 align-items-end">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="col-md-2"><label class="form-label">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+    {% endfor %}
+    <div class="col-md-2"><button class="s-btn s-btn-primario w-100" type="submit"><i class="fas fa-save"></i> Guardar</button></div>
+  </form>
+</div>
+<div class="s-card">
+  <div class="s-card-header"><h5 class="s-card-titulo">Cupos configurados</h5></div>
+  <div class="s-tabla-wrap">
+    <table class="s-tabla">
+      <thead><tr><th>Año</th><th>Grado</th><th>Sección</th><th>Cupo</th><th>Inscritos</th><th>Disponibles</th></tr></thead>
+      <tbody>
+      {% for cap in capacities %}
+      <tr><td>{{ cap.academic_year }}</td><td>{{ cap.etapa }} / {{ cap.grado }}</td><td>{{ cap.section }}</td><td>{{ cap.capacity }}</td><td>{{ cap.enrolled_count }}</td><td>{{ cap.available_slots }}</td></tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--s-suave)">Sin cupos configurados</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

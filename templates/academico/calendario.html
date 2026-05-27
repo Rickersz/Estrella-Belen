@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block titulo %}Calendario{% endblock %}
+{% block titulo_pagina %}Calendario escolar{% endblock %}
+{% block subtitulo_pagina %}Eventos y fechas institucionales{% endblock %}
+{% block contenido %}
+<div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Calendario</h5>{% if user.is_admin %}<a href="{% url 'calendar_create' %}" class="s-btn s-btn-primario">Nuevo evento</a>{% endif %}</div>
+{% for event in events %}<div style="padding:14px;border-bottom:1px solid var(--s-borde)"><strong>{{ event.title }}</strong> <span class="s-badge s-badge-azul">{{ event.get_event_type_display }}</span><br><span style="color:var(--s-suave)">{{ event.start_date|date:"d/m/Y" }}{% if event.end_date %} - {{ event.end_date|date:"d/m/Y" }}{% endif %} | {{ event.audience }}</span><p style="margin:8px 0 0">{{ event.description }}</p></div>{% empty %}<div style="padding:30px;text-align:center">Sin eventos</div>{% endfor %}</div>
+{% endblock %}

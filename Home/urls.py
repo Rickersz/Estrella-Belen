@@ -27,6 +27,7 @@ urlpatterns = [
     path('reportes/', include('reportes.urls')),
     path('bitacora/', include('bitacora.urls')),
     path('pagos/', include('pagos.urls')),
+    path('academico/', include('academico.urls')),
 ]
 
 from django.conf import settings

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Enrollment, Parent, Student
+from .models import AttendanceRecord, Enrollment, GradeSectionCapacity, Parent, Student, StudentDocumentChecklist, StudentHealthRecord
 
 
 class StudentForm(forms.ModelForm):
@@ -8,7 +8,7 @@ class StudentForm(forms.ModelForm):
         model = Student
         fields = [
             'student_id', 'first_name', 'last_name', 'student_class', 'tiene_cedula', 'cedula',
-            'nacionalidad', 'estado_natal', 'edad', 'etnia', 'pais_extranjero', 'direccion_completa',
+            'nacionalidad', 'estado_natal', 'etnia', 'pais_extranjero', 'direccion_completa',
             'etapa', 'grado', 'section', 'admission_number', 'joining_date', 'gender', 'date_of_birth',
             'pantalon', 'camisa', 'calzado', 'peso', 'estatura', 'transporte', 'vive_con_padres',
             'huerfano', 'discapacidad', 'condicion', 'area_condicion', 'tipo_discapacidad',
@@ -35,12 +35,6 @@ class StudentForm(forms.ModelForm):
     def clean_cedula(self):
         cedula = (self.cleaned_data.get('cedula') or '').strip()
         return cedula or None
-
-    def clean_edad(self):
-        edad = (self.cleaned_data.get('edad') or '').strip()
-        if edad and not edad.isdigit():
-            raise forms.ValidationError('La edad debe contener solo números.')
-        return edad or None
 
     def clean(self):
         cleaned_data = super().clean()
@@ -107,3 +101,65 @@ class EnrollmentForm(forms.ModelForm):
         if monto < 0:
             raise forms.ValidationError('El monto de inscripción no puede ser negativo.')
         return monto
+
+
+class GradeSectionCapacityForm(forms.ModelForm):
+    class Meta:
+        model = GradeSectionCapacity
+        fields = ['academic_year', 'etapa', 'grado', 'section', 'capacity']
+        widgets = {
+            'academic_year': forms.TextInput(attrs={'class': 'form-control'}),
+            'etapa': forms.TextInput(attrs={'class': 'form-control'}),
+            'grado': forms.TextInput(attrs={'class': 'form-control'}),
+            'section': forms.TextInput(attrs={'class': 'form-control'}),
+            'capacity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+        }
+
+
+class StudentDocumentChecklistForm(forms.ModelForm):
+    class Meta:
+        model = StudentDocumentChecklist
+        fields = [
+            'birth_certificate', 'identity_card_copy', 'representative_id_copy',
+            'student_photos', 'previous_school_certificate', 'vaccination_card',
+            'medical_report', 'authorizations', 'notes',
+        ]
+        widgets = {'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3})}
+
+
+class StudentHealthRecordForm(forms.ModelForm):
+    class Meta:
+        model = StudentHealthRecord
+        fields = [
+            'allergies', 'medications', 'emergency_contact_name', 'emergency_contact_phone',
+            'medical_insurance', 'special_condition', 'important_notes',
+        ]
+        widgets = {
+            'allergies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'medications': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'emergency_contact_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'emergency_contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'medical_insurance': forms.TextInput(attrs={'class': 'form-control'}),
+            'special_condition': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'important_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+class AttendanceRecordForm(forms.ModelForm):
+    class Meta:
+        model = AttendanceRecord
+        fields = ['student', 'date', 'academic_year', 'status', 'notes']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'academic_year': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class SchoolYearClosureForm(forms.Form):
+    current_academic_year = forms.CharField(label='Año escolar actual', max_length=9, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    next_academic_year = forms.CharField(label='Proximo año escolar', max_length=9, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    default_section = forms.CharField(label='Seccion por defecto', max_length=15, initial='A', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    close_grades = forms.BooleanField(label='Bloquear notas del año cerrado', required=False, initial=True, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))

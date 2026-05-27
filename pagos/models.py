@@ -34,6 +34,18 @@ class Payment(models.Model):
         (STATUS_OVERDUE, 'Vencido'),
     ]
 
+    VERIFICATION_NOT_REQUIRED = 'no_requiere'
+    VERIFICATION_PENDING = 'pendiente_revision'
+    VERIFICATION_APPROVED = 'aprobado'
+    VERIFICATION_REJECTED = 'rechazado'
+
+    VERIFICATION_CHOICES = [
+        (VERIFICATION_NOT_REQUIRED, 'No requiere revision'),
+        (VERIFICATION_PENDING, 'Pendiente por verificar'),
+        (VERIFICATION_APPROVED, 'Verificado'),
+        (VERIFICATION_REJECTED, 'Rechazado'),
+    ]
+
     student = models.ForeignKey('estudiante.Student', on_delete=models.CASCADE, related_name='payments')
     representative = models.ForeignKey('estudiante.Parent', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
     concept = models.CharField(max_length=150, default='Mensualidad')
@@ -45,6 +57,13 @@ class Payment(models.Model):
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     reference = models.CharField(max_length=80, blank=True)
+    reported_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    reported_reference = models.CharField(max_length=80, blank=True)
+    reported_at = models.DateTimeField(null=True, blank=True)
+    reported_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reported_payments')
+    verification_status = models.CharField(max_length=30, choices=VERIFICATION_CHOICES, default=VERIFICATION_NOT_REQUIRED)
+    verified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_payments')
+    verified_at = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments_created')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,6 +74,7 @@ class Payment(models.Model):
         indexes = [
             models.Index(fields=['status', 'due_date']),
             models.Index(fields=['student', 'academic_year']),
+            models.Index(fields=['verification_status', 'reported_at']),
         ]
 
     def __str__(self):

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Gestión escolar{% endblock %}
+{% block titulo_pagina %}Gestión escolar{% endblock %}
+{% block subtitulo_pagina %}Año activo, cupos, asistencia y cierre académico{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+  <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-calendar"></i></div><div><div class="s-stat-valor">{{ active_year }}</div><div class="s-stat-label">Año activo</div></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-user-graduate"></i></div><div><div class="s-stat-valor">{{ students_count }}</div><div class="s-stat-label">Estudiantes</div></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-clipboard-list"></i></div><div><div class="s-stat-valor">{{ active_enrollments }}</div><div class="s-stat-label">Inscripciones activas</div></div></div></div>
+  <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono turquesa"><i class="fas fa-user-times"></i></div><div><div class="s-stat-valor">{{ attendance_absences }}</div><div class="s-stat-label">Ausencias</div></div></div></div>
+</div>
+
+<div class="s-card mb-4">
+  <div class="s-card-header"><h5 class="s-card-titulo">Acciones escolares</h5></div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'capacity_list' %}" class="s-btn s-btn-secundario"><i class="fas fa-chair"></i> Cupos</a>
+    <a href="{% url 'attendance_list' %}" class="s-btn s-btn-secundario"><i class="fas fa-calendar-check"></i> Asistencia</a>
+    <a href="{% url 'school_year_closure' %}" class="s-btn s-btn-primario"><i class="fas fa-level-up-alt"></i> Cierre y promoción</a>
+  </div>
+</div>
+
+<div class="s-card">
+  <div class="s-card-header"><h5 class="s-card-titulo">Distribución por grado</h5></div>
+  <div class="s-tabla-wrap">
+    <table class="s-tabla">
+      <thead><tr><th>Etapa</th><th>Grado</th><th>Sección</th><th>Total</th></tr></thead>
+      <tbody>
+        {% for row in by_grade %}
+        <tr><td>{{ row.etapa }}</td><td>{{ row.grado }}</td><td>{{ row.section }}</td><td>{{ row.total }}</td></tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align:center;padding:30px;color:var(--s-suave)">Sin inscripciones activas</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

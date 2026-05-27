@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Student, Parent, Enrollment
+from .models import AttendanceRecord, Enrollment, GradeSectionCapacity, Parent, Student, StudentDocumentChecklist, StudentHealthRecord
 
 
 # =========================
@@ -176,7 +176,7 @@ class EnrollmentAdmin(admin.ModelAdmin):
         'academic_year',
         'etapa',
         'grado',
-        'status',
+        'result_status',
     )
 
     search_fields = (
@@ -184,3 +184,29 @@ class EnrollmentAdmin(admin.ModelAdmin):
         'student__last_name',
         'student__student_id',
     )
+
+
+@admin.register(GradeSectionCapacity)
+class GradeSectionCapacityAdmin(admin.ModelAdmin):
+    list_display = ('academic_year', 'etapa', 'grado', 'section', 'capacity')
+    list_filter = ('academic_year', 'etapa', 'grado')
+    search_fields = ('academic_year', 'grado', 'section')
+
+
+@admin.register(StudentDocumentChecklist)
+class StudentDocumentChecklistAdmin(admin.ModelAdmin):
+    list_display = ('student', 'birth_certificate', 'identity_card_copy', 'vaccination_card', 'medical_report', 'updated_at')
+    search_fields = ('student__first_name', 'student__last_name', 'student__student_id')
+
+
+@admin.register(StudentHealthRecord)
+class StudentHealthRecordAdmin(admin.ModelAdmin):
+    list_display = ('student', 'emergency_contact_name', 'emergency_contact_phone', 'medical_insurance', 'updated_at')
+    search_fields = ('student__first_name', 'student__last_name', 'student__student_id')
+
+
+@admin.register(AttendanceRecord)
+class AttendanceRecordAdmin(admin.ModelAdmin):
+    list_display = ('student', 'date', 'academic_year', 'status', 'recorded_by')
+    list_filter = ('academic_year', 'status', 'date')
+    search_fields = ('student__first_name', 'student__last_name', 'student__student_id')

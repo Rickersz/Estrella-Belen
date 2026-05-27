@@ -12,9 +12,9 @@ class PaymentConfigAdmin(admin.ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ('student', 'representative', 'concept', 'due_date', 'payment_date', 'amount_due', 'amount_paid', 'balance', 'status')
-    list_filter = ('status', 'academic_year', 'due_date')
-    search_fields = ('student__first_name', 'student__last_name', 'student__student_id', 'reference')
+    list_display = ('student', 'representative', 'concept', 'due_date', 'payment_date', 'amount_due', 'amount_paid', 'balance', 'status', 'verification_status')
+    list_filter = ('status', 'verification_status', 'academic_year', 'due_date')
+    search_fields = ('student__first_name', 'student__last_name', 'student__student_id', 'reference', 'reported_reference')
     date_hierarchy = 'due_date'
 
 

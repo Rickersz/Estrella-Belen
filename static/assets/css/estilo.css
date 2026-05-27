@@ -1429,7 +1429,8 @@ body.sistema-body {
 /* ===== SIDEBAR ===== */
 .sidebar {
   width: 260px;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
   background: var(--s-sidebar);
   border-right: 1px solid var(--s-borde);
   display: flex;
@@ -1439,8 +1440,24 @@ body.sistema-body {
   left: 0;
   z-index: 1000;
   transition: transform 0.3s ease;
-  overflow-y: auto;
+  overflow: hidden;
   overflow-x: hidden;
+}
+
+.sidebar::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(125,199,246,0.28);
+  border-radius: 999px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
 }
 
 /* Logo del sidebar */
@@ -1482,7 +1499,11 @@ body.sistema-body {
 /* Navegación */
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 14px 10px;
+  padding-bottom: 22px;
 }
 
 .sidebar-seccion-label {
@@ -1589,6 +1610,7 @@ body.sistema-body {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
   padding: 14px 16px;
   border-top: 1px solid var(--s-borde);
   background: rgba(125,199,246,0.03);
@@ -2270,4 +2292,41 @@ body.sistema-body {
 .fortaleza-texto {
   font-size: 0.72rem;
   color: var(--s-suave);
+}
+
+/* Ajuste final: el menu lateral completo debe poder desplazarse.
+   Se deja al final para ganar a reglas anteriores del sidebar. */
+body.sistema-body .sidebar {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(125,199,246,0.38) rgba(255,255,255,0.04);
+}
+
+body.sistema-body .sidebar-logo,
+body.sistema-body .sidebar-usuario {
+  flex-shrink: 0 !important;
+}
+
+body.sistema-body .sidebar-nav {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  padding-bottom: 28px !important;
+}
+
+body.sistema-body .sidebar::-webkit-scrollbar {
+  width: 9px;
+}
+
+body.sistema-body .sidebar::-webkit-scrollbar-thumb {
+  background: rgba(125,199,246,0.38);
+  border-radius: 999px;
+}
+
+body.sistema-body .sidebar::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
 }

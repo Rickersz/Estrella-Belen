@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block titulo %}Historial academico{% endblock %}
+{% block titulo_pagina %}Historial academico{% endblock %}
+{% block subtitulo_pagina %}Notas, boletines y disciplina{% endblock %}
+{% block contenido %}
+<div class="s-card mb-3">
+  <div class="s-card-header"><h5 class="s-card-titulo">Estudiante</h5>{% if student %}<a class="s-btn s-btn-exito" href="{% url 'report_card_pdf' student.pk %}">Descargar boletin PDF</a>{% endif %}</div>
+  {% for s in students %}<a class="s-btn {% if student.pk == s.pk %}s-btn-primario{% else %}s-btn-secundario{% endif %}" href="{% url 'academic_history_student' s.pk %}">{{ s.first_name }} {{ s.last_name }}</a>{% empty %}<span style="color:var(--s-suave)">Sin estudiantes asociados</span>{% endfor %}
+</div>
+<div class="row g-3">
+  <div class="col-lg-7"><div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Notas</h5></div>{% include 'academico/tabla_notas.html' %}</div></div>
+  <div class="col-lg-5"><div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Observaciones</h5></div>{% for o in observations %}<div style="padding:12px;border-bottom:1px solid var(--s-borde)"><strong>{{ o.get_severity_display }}</strong> {{ o.date|date:"d/m/Y" }}<br>{{ o.description }}</div>{% empty %}<div style="padding:30px;text-align:center">Sin observaciones</div>{% endfor %}</div></div>
+</div>
+{% endblock %}

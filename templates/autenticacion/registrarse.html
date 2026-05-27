@@ -1,64 +1,67 @@
 {% extends 'header.html' %}
 {% load static %}
 
-{% block page_title %} Estrella de Belén - Registrarse {% endblock %}
+{% block page_title %}Solicitar acceso - Estrella de Belen{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'assets/css/estilo.css' %}">{% endblock %}
 
 {% block body %}
-<div class="main-wrapper login-body">
-    <div class="login-wrapper">
-        <div class="container">
-            <div class="loginbox">
-                <div class="login-left">
-                    <img class="img-fluid" src="{% static 'assets/img/logo.png' %}" alt="Logo">
-                </div>
-                <div class="login-right">
-                    <div class="login-right-wrap">
-                        <h1>Registrate</h1>
-                        <p class="account-subtitle">Accede a nuestro panel de control</p>
-                        {% if error %}
-                        <div class="alert alert-danger" role="alert">
-                            <span>{{ error }}</span>
-                        </div>
-                        {% endif %}
-
-                        <form action="{% url 'registrarse' %}" method="post">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input class="form-control" type="text" name="first_name" placeholder="Nombre"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" type="text" name="last_name" placeholder="Apellido"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" type="email" name="email" placeholder="Correo" required>
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" type="password" name="password" placeholder="Contraseña"
-                                    required>
-                            </div>
-                            <div class="form-group">
-                                <input class="form-control" type="password" name="confirm_password"
-                                    placeholder="Confirmar Contraseña" required>
-                            </div>
-                            <div class="form-group mb-0">
-                                <button class="btn btn-primary btn-block" type="submit">Registrate</button>
-                            </div>
-                        </form>
-
-                        <div class="login-or">
-                            <span class="or-line"></span>
-                            <span class="span-or">o</span>
-                        </div>
-
-                        <div class="text-center dont-have">¿Ya tienes una cuenta? <a
-                                href="{% url 'iniciar_sesion' %}"> Inicia sesión </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="login-bg"><div class="grid-lines"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
+<div class="login-page login-page-wrapper">
+  <div class="login-card" style="max-width:620px;min-height:auto">
+    <div class="login-panel-right" style="flex:1;padding:42px 44px">
+      <div class="login-form-wrap" style="max-width:100%">
+        <div style="text-align:center;margin-bottom:22px">
+          <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belen" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,0.04);padding:6px">
+          <h1 class="login-form-title" style="font-size:1.5rem;margin-top:14px">Solicitar acceso</h1>
+          <p class="login-form-subtitle">El acceso al sistema es privado. Administracion verificara tus datos antes de habilitar una cuenta.</p>
         </div>
+
+        {% if error %}<div class="login-alert"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
+
+        <form action="{% url 'registrarse' %}" method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="login-field-label">Nombre del representante</label>
+              <input class="login-field-input" type="text" name="full_name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="login-field-label">Correo</label>
+              <input class="login-field-input" type="email" name="email" required>
+            </div>
+            <div class="col-md-6">
+              <label class="login-field-label">Telefono</label>
+              <input class="login-field-input" type="text" name="phone" required>
+            </div>
+            <div class="col-md-6">
+              <label class="login-field-label">Cedula</label>
+              <input class="login-field-input" type="text" name="document_id">
+            </div>
+            <div class="col-md-6">
+              <label class="login-field-label">Estudiante</label>
+              <input class="login-field-input" type="text" name="student_name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="login-field-label">Grado / seccion</label>
+              <input class="login-field-input" type="text" name="student_grade">
+            </div>
+            <div class="col-md-6">
+              <label class="login-field-label">Parentesco</label>
+              <input class="login-field-input" type="text" name="relationship" value="Representante">
+            </div>
+            <div class="col-12">
+              <label class="login-field-label">Mensaje opcional</label>
+              <textarea class="login-field-input" name="message" rows="3" style="height:auto"></textarea>
+            </div>
+          </div>
+          <button class="btn-login mt-4" type="submit"><span><i class="fas fa-paper-plane me-2"></i>Enviar solicitud</span></button>
+        </form>
+
+        <div class="login-links">
+          <a href="{% url 'iniciar_sesion' %}" class="login-forgot-link"><i class="fas fa-arrow-left me-1"></i> Volver al inicio de sesion</a>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

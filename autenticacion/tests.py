@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import CustomUser, OTPVerificacion
+from .models import AccessRequest, CustomUser, OTPVerificacion
 
 
 class CustomUserManagerTests(TestCase):
@@ -11,20 +11,22 @@ class CustomUserManagerTests(TestCase):
 
 
 class AuthenticationFlowTests(TestCase):
-    def test_registro_queda_pendiente_de_aprobacion(self):
+    def test_registro_publico_crea_solicitud_no_usuario(self):
         response = self.client.post(reverse('registrarse'), {
-            'first_name': 'Ana',
-            'last_name': 'Perez',
+            'full_name': 'Ana Perez',
             'email': 'ana@test.com',
-            'password': 'ClaveSegura123',
-            'confirm_password': 'ClaveSegura123',
+            'phone': '04141234567',
+            'document_id': 'V123',
+            'student_name': 'Luis Perez',
+            'student_grade': '3A',
+            'relationship': 'Madre',
         })
 
-        user = CustomUser.objects.get(email='ana@test.com')
         self.assertRedirects(response, reverse('iniciar_sesion'))
-        self.assertFalse(user.is_active)
-        self.assertFalse(user.is_authorized)
-        self.assertTrue(user.is_student)
+        self.assertFalse(CustomUser.objects.filter(email='ana@test.com').exists())
+        request = AccessRequest.objects.get(email='ana@test.com')
+        self.assertEqual(request.status, AccessRequest.STATUS_PENDING)
+        self.assertEqual(request.student_name, 'Luis Perez')
 
     def test_recuperacion_no_revela_si_el_correo_existe(self):
         response = self.client.post(reverse('recuperar_contrasena'), {'email': 'nadie@test.com'})

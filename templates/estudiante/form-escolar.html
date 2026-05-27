@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block titulo %}{{ title }}{% endblock %}
+{% block titulo_pagina %}{{ title }}{% endblock %}
+{% block subtitulo_pagina %}{{ student.first_name }} {{ student.last_name }}{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="{% if field.field.widget.input_type == 'checkbox' %}col-md-3{% else %}col-md-6{% endif %}">
+      {% if field.field.widget.input_type == 'checkbox' %}
+      <div class="form-check">{{ field }} <label class="form-check-label">{{ field.label }}</label></div>
+      {% else %}
+      <label class="form-label">{{ field.label }}</label>{{ field }}
+      {% endif %}
+      {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <a href="{% url 'student_detail' student.slug %}" class="s-btn s-btn-secundario"><i class="fas fa-arrow-left"></i> Volver</a>
+      <button class="s-btn s-btn-primario" type="submit"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

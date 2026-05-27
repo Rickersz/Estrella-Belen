@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block titulo %}Horario{% endblock %}
+{% block titulo_pagina %}Horario de clases{% endblock %}
+{% block subtitulo_pagina %}Secciones, materias y docentes{% endblock %}
+{% block contenido %}
+<div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Horario</h5>{% if user.is_admin %}<a href="{% url 'schedule_create' %}" class="s-btn s-btn-primario">Nuevo</a>{% endif %}</div>
+<div class="s-tabla-wrap"><table class="s-tabla"><thead><tr><th>Dia</th><th>Hora</th><th>Seccion</th><th>Materia</th><th>Profesor</th><th>Aula</th></tr></thead><tbody>{% for item in schedules %}<tr><td>{{ item.get_day_display }}</td><td>{{ item.start_time }} - {{ item.end_time }}</td><td>{{ item.class_assigned }}</td><td>{{ item.subject.name }}</td><td>{{ item.teacher.name|default:"-" }}</td><td>{{ item.classroom|default:"-" }}</td></tr>{% empty %}<tr><td colspan="6" style="text-align:center;padding:30px">Sin horario</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

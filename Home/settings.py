@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'reportes',
     'bitacora',
     'pagos',
+    'academico',
 ]
 
 MIDDLEWARE = [
@@ -109,6 +110,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 16,
+        },
+    },
+    {
+        'NAME': 'autenticacion.validators.ComplexPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -117,6 +124,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+CSRF_FAILURE_VIEW = 'autenticacion.views.csrf_failure'
 
 PASSWORD_HASHERS = [
     'autenticacion.hashers.FastPBKDF2PasswordHasher',
@@ -165,6 +174,9 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'webmaster@localhost')
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '10'))
+
+WHATSAPP_API_URL = os.getenv('WHATSAPP_API_URL', '')
+WHATSAPP_API_TOKEN = os.getenv('WHATSAPP_API_TOKEN', '')
 
 OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', '5'))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', '60'))

@@ -1,15 +1,19 @@
 ﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import login
 from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from django.db.models import Sum
-from autenticacion.models import CustomUser
-from .forms import UserCreationForm, UserEditForm
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db.models import Count, Q, Sum
+from django.urls import reverse
+from autenticacion.models import AccessRequest, CustomUser
+from autenticacion.email_queue import enqueue_generic_email
+from .forms import InvitationPasswordForm, RepresentativeAccessForm, SchoolConfigurationForm, UserCreationForm, UserEditForm
 from escuela import context_processors
-from .models import Notification
-from estudiante.models import Student
+from .models import AuditLog, Notification, RepresentativeInvitation, SchoolConfiguration
+from estudiante.models import Parent, Student
 from profesor.models import Teacher
 from materia.models import Subject
 from bitacora.models import AccessLog
@@ -33,6 +37,24 @@ def get_admin_dashboard_context(extra_context=None):
     if extra_context:
         context.update(extra_context)
     return context
+
+
+def client_ip(request):
+    forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def log_audit(request, action, obj=None, description=''):
+    AuditLog.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        action=action,
+        model_name=obj.__class__.__name__ if obj else '',
+        object_id=str(getattr(obj, 'pk', '')) if obj else '',
+        description=description,
+        ip_address=client_ip(request),
+    )
 
 
 @login_required(login_url='iniciar_sesion')
@@ -172,6 +194,224 @@ def user_management(request):
         'form': form,
     }
     return render(request, 'escuela/gestion-usuarios.html', context)
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+def system_configuration(request):
+    config = SchoolConfiguration.get_solo()
+    form = SchoolConfigurationForm(request.POST or None, instance=config)
+    if request.method == 'POST' and form.is_valid():
+        config = form.save()
+        log_audit(request, 'actualizar_configuracion', config, 'Actualizo la configuracion general del sistema.')
+        messages.success(request, 'Configuracion general actualizada correctamente.')
+        return redirect('system_configuration')
+    return render(request, 'escuela/configuracion.html', {'form': form, 'config': config})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+def representative_management(request):
+    query = request.GET.get('q', '').strip()
+    status = request.GET.get('estado', '').strip()
+    parents = Parent.objects.select_related('user').prefetch_related('student_set', 'portal_invitations').annotate(students_count=Count('student'))
+    if query:
+        parents = parents.filter(
+            Q(father_name__icontains=query) |
+            Q(mother_name__icontains=query) |
+            Q(father_email__icontains=query) |
+            Q(mother_email__icontains=query) |
+            Q(cedula_padre__icontains=query) |
+            Q(student__first_name__icontains=query) |
+            Q(student__last_name__icontains=query) |
+            Q(student__student_id__icontains=query)
+        ).distinct()
+    if status == 'sin_usuario':
+        parents = parents.filter(user__isnull=True)
+    elif status == 'activo':
+        parents = parents.filter(user__isnull=False, user__is_active=True, user__is_locked=False)
+    elif status == 'bloqueado':
+        parents = parents.filter(user__is_locked=True)
+    elif status == 'invitado':
+        parents = parents.filter(portal_invitations__status=RepresentativeInvitation.STATUS_PENDING).distinct()
+
+    all_parents = Parent.objects.select_related('user')
+    return render(request, 'escuela/representantes.html', {
+        'parents': parents.order_by('father_name', 'mother_name'),
+        'query': query,
+        'status': status,
+        'total_parents': all_parents.count(),
+        'with_user': all_parents.filter(user__isnull=False).count(),
+        'without_user': all_parents.filter(user__isnull=True).count(),
+        'pending_invitations': RepresentativeInvitation.objects.filter(status=RepresentativeInvitation.STATUS_PENDING).count(),
+    })
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+def access_request_list(request):
+    status = request.GET.get('estado', '').strip()
+    query = request.GET.get('q', '').strip()
+    requests_qs = AccessRequest.objects.select_related('reviewed_by')
+    if status:
+        requests_qs = requests_qs.filter(status=status)
+    if query:
+        requests_qs = requests_qs.filter(
+            Q(full_name__icontains=query) |
+            Q(email__icontains=query) |
+            Q(phone__icontains=query) |
+            Q(document_id__icontains=query) |
+            Q(student_name__icontains=query)
+        )
+    return render(request, 'escuela/solicitudes-acceso.html', {
+        'requests_qs': requests_qs,
+        'status': status,
+        'query': query,
+        'status_choices': AccessRequest.STATUS_CHOICES,
+        'pending_count': AccessRequest.objects.filter(status=AccessRequest.STATUS_PENDING).count(),
+    })
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
+def update_access_request_status(request, request_id, status):
+    access_request = get_object_or_404(AccessRequest, pk=request_id)
+    valid_statuses = {choice[0] for choice in AccessRequest.STATUS_CHOICES}
+    if status not in valid_statuses:
+        messages.error(request, 'Estado de solicitud invalido.')
+        return redirect('access_request_list')
+    access_request.status = status
+    access_request.reviewed_by = request.user
+    access_request.reviewed_at = timezone.now()
+    access_request.save(update_fields=['status', 'reviewed_by', 'reviewed_at'])
+    log_audit(request, 'actualizar_solicitud_acceso', access_request, f'Cambio solicitud a {status}.')
+    messages.success(request, 'Solicitud actualizada correctamente.')
+    return redirect('access_request_list')
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+@ensure_csrf_cookie
+def representative_access(request, parent_id):
+    parent = get_object_or_404(Parent.objects.select_related('user'), pk=parent_id)
+    form = RepresentativeAccessForm(request.POST or None, parent=parent)
+    if request.method == 'POST' and form.is_valid():
+        email = form.cleaned_data['email'].lower()
+        user, created = CustomUser.objects.get_or_create(
+            email=email,
+            defaults={
+                'first_name': form.cleaned_data['first_name'],
+                'last_name': form.cleaned_data['last_name'],
+                'is_representative': True,
+                'is_active': False,
+            },
+        )
+        if created:
+            user.set_unusable_password()
+        user.first_name = form.cleaned_data['first_name']
+        user.last_name = form.cleaned_data['last_name']
+        user.is_representative = True
+        user.save()
+        parent.user = user
+        parent.save(update_fields=['user'])
+        invitation = create_representative_invitation(request, parent, user, email)
+        send_representative_invitation(request, invitation)
+        log_audit(request, 'crear_acceso_representante', parent, f'Creo acceso e invitacion para {email}.')
+        messages.success(request, 'Acceso creado. Se envio la invitacion al correo del representante.')
+        return redirect('representative_management')
+    return render(request, 'escuela/acceso-representante.html', {'form': form, 'parent': parent})
+
+
+def create_representative_invitation(request, parent, user, email):
+    RepresentativeInvitation.objects.filter(
+        parent=parent,
+        user=user,
+        status=RepresentativeInvitation.STATUS_PENDING,
+    ).update(status=RepresentativeInvitation.STATUS_CANCELLED)
+    return RepresentativeInvitation.objects.create(
+        parent=parent,
+        user=user,
+        email=email,
+        created_by=request.user,
+        expires_at=timezone.now() + timezone.timedelta(days=7),
+    )
+
+
+def send_representative_invitation(request, invitation):
+    invitation_url = request.build_absolute_uri(reverse('accept_representative_invitation', args=[invitation.token]))
+    message = (
+        'Hola.\n\n'
+        'La institucion creo tu acceso al Portal de Padres.\n\n'
+        f'Ingresa en este enlace para crear tu contraseña:\n{invitation_url}\n\n'
+        'El enlace vence en 7 dias. Si no esperabas este correo, puedes ignorarlo.'
+    )
+    enqueue_generic_email('Invitacion al Portal de Padres - Estrella de Belen', message, invitation.email)
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
+def resend_representative_invitation(request, parent_id):
+    parent = get_object_or_404(Parent.objects.select_related('user'), pk=parent_id, user__isnull=False)
+    invitation = create_representative_invitation(request, parent, parent.user, parent.user.email)
+    send_representative_invitation(request, invitation)
+    log_audit(request, 'reenviar_invitacion_representante', parent, f'Reenvio invitacion a {parent.user.email}.')
+    messages.success(request, 'Invitacion reenviada correctamente.')
+    return redirect('representative_management')
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
+def toggle_representative_access(request, parent_id):
+    parent = get_object_or_404(Parent.objects.select_related('user'), pk=parent_id, user__isnull=False)
+    user = parent.user
+    user.is_locked = not user.is_locked
+    user.locked_at = timezone.now() if user.is_locked else None
+    user.save(update_fields=['is_locked', 'locked_at'])
+    action = 'bloqueo_acceso_representante' if user.is_locked else 'desbloqueo_acceso_representante'
+    log_audit(request, action, parent, f'Cambio acceso de {user.email}.')
+    messages.success(request, 'Estado de acceso actualizado.')
+    return redirect('representative_management')
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
+def unlink_representative_access(request, parent_id):
+    parent = get_object_or_404(Parent.objects.select_related('user'), pk=parent_id, user__isnull=False)
+    email = parent.user.email
+    RepresentativeInvitation.objects.filter(parent=parent, status=RepresentativeInvitation.STATUS_PENDING).update(status=RepresentativeInvitation.STATUS_CANCELLED)
+    parent.user = None
+    parent.save(update_fields=['user'])
+    log_audit(request, 'desvincular_representante', parent, f'Desvinculo acceso {email}.')
+    messages.warning(request, 'Acceso desvinculado del representante.')
+    return redirect('representative_management')
+
+
+@ensure_csrf_cookie
+def accept_representative_invitation(request, token):
+    invitation = get_object_or_404(RepresentativeInvitation.objects.select_related('user', 'parent'), token=token)
+    invitation.mark_expired_if_needed()
+    if not invitation.is_valid:
+        return render(request, 'escuela/invitacion-expirada.html', {'invitation': invitation})
+    form = InvitationPasswordForm(request.POST or None, user=invitation.user)
+    if request.method == 'POST' and form.is_valid():
+        user = invitation.user
+        user.set_password(form.cleaned_data['password'])
+        user.is_active = True
+        user.is_representative = True
+        user.is_locked = False
+        user.locked_at = None
+        user.save(update_fields=['password', 'is_active', 'is_representative', 'is_locked', 'locked_at'])
+        invitation.status = RepresentativeInvitation.STATUS_ACCEPTED
+        invitation.accepted_at = timezone.now()
+        invitation.save(update_fields=['status', 'accepted_at'])
+        login(request, user, backend='autenticacion.backends.EmailBackend')
+        messages.success(request, 'Tu acceso al Portal de Padres fue activado correctamente.')
+        return redirect('representative_dashboard')
+    return render(request, 'escuela/aceptar-invitacion.html', {'form': form, 'invitation': invitation})
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_admin, login_url='iniciar_sesion')

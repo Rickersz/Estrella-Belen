@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block titulo %}Comunicacion{% endblock %}
+{% block titulo_pagina %}Comunicacion{% endblock %}
+{% block subtitulo_pagina %}Mensajes internos{% endblock %}
+{% block contenido %}
+<div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Mensajes recibidos</h5><a href="{% url 'message_create' %}" class="s-btn s-btn-primario">Nuevo mensaje</a></div>
+{% for msg in messages_qs %}<div style="padding:14px;border-bottom:1px solid var(--s-borde)"><strong>{{ msg.subject }}</strong><br><span style="color:var(--s-suave)">De: {{ msg.sender.email|default:"Sistema" }} | {{ msg.created_at|date:"d/m/Y H:i" }}</span><p style="margin:8px 0 0">{{ msg.body }}</p></div>{% empty %}<div style="padding:30px;text-align:center">Sin mensajes</div>{% endfor %}</div>
+{% endblock %}

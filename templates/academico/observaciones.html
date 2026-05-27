@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block titulo %}Observaciones{% endblock %}
+{% block titulo_pagina %}Observaciones disciplinarias{% endblock %}
+{% block subtitulo_pagina %}Seguimiento de convivencia escolar{% endblock %}
+{% block contenido %}
+<div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Observaciones</h5>{% if user.is_admin or user.is_teacher %}<a href="{% url 'observation_create' %}" class="s-btn s-btn-primario">Nueva</a>{% endif %}</div>
+<div class="s-tabla-wrap"><table class="s-tabla"><thead><tr><th>Fecha</th><th>Estudiante</th><th>Severidad</th><th>Descripcion</th><th>Accion</th></tr></thead><tbody>{% for o in observations %}<tr><td>{{ o.date|date:"d/m/Y" }}</td><td>{{ o.student.first_name }} {{ o.student.last_name }}</td><td>{{ o.get_severity_display }}</td><td>{{ o.description }}</td><td>{{ o.action_taken|default:"-" }}</td></tr>{% empty %}<tr><td colspan="5" style="text-align:center;padding:30px">Sin observaciones</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

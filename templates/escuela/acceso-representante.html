@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Acceso de representante{% endblock %}
+{% block titulo_pagina %}Acceso de representante{% endblock %}
+{% block subtitulo_pagina %}Invitacion segura al Portal de Padres{% endblock %}
+
+{% block contenido %}
+<div class="s-card mb-3">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo">{{ parent.father_name|default:parent.mother_name }}</h5>
+    </div>
+    <div class="row g-2">
+        <div class="col-md-6"><strong>Correo sugerido:</strong> {{ parent.father_email|default:parent.mother_email|default:"-" }}</div>
+        <div class="col-md-6"><strong>Telefono:</strong> {{ parent.father_mobile|default:parent.mother_mobile|default:"-" }}</div>
+        <div class="col-12"><strong>Estudiantes:</strong> {% for student in parent.student_set.all %}<span class="s-badge s-badge-azul">{{ student.first_name }} {{ student.last_name }}</span> {% empty %}-{% endfor %}</div>
+    </div>
+</div>
+
+<div class="s-card">
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="col-md-4">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+        <div class="col-12 d-flex justify-content-end gap-2">
+            <a href="{% url 'representative_management' %}" class="s-btn s-btn-secundario"><i class="fas fa-arrow-left"></i> Volver</a>
+            <button class="s-btn s-btn-primario" type="submit"><i class="fas fa-paper-plane"></i> Enviar invitacion</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -3,15 +3,16 @@ from django.contrib import messages
 from django.http import HttpResponseForbidden, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 import csv
 
-from .forms import EnrollmentForm, ParentForm, StudentForm
-from .models import Student, Parent, Enrollment
+from .forms import AttendanceRecordForm, EnrollmentForm, GradeSectionCapacityForm, ParentForm, SchoolYearClosureForm, StudentDocumentChecklistForm, StudentForm, StudentHealthRecordForm
+from .models import AttendanceRecord, Enrollment, GradeSectionCapacity, Parent, Student, StudentDocumentChecklist, StudentHealthRecord
 from escuela.views import create_notification
-from escuela.models import ClassTeacherAssignment
+from escuela.models import ClassTeacherAssignment, SchoolConfiguration
 from profesor.models import Teacher
 from reportes.models import Constancia
+from academico.models import AcademicGrade
 
 
 def puede_ver_estudiantes(user):
@@ -24,6 +25,26 @@ def puede_gestionar_estudiantes(user):
 
 def puede_eliminar_estudiantes(user):
     return user.is_authenticated and getattr(user, 'is_admin', False)
+
+
+def puede_gestion_escolar(user):
+    return user.is_authenticated and getattr(user, 'is_admin', False)
+
+
+GRADE_FLOW = {
+    ('Preescolar', '1er'): ('Preescolar', '2do'),
+    ('Preescolar', '2do'): ('Preescolar', '3er'),
+    ('Preescolar', '3er'): ('Primaria', '1ro'),
+    ('Primaria', '1ro'): ('Primaria', '2do'),
+    ('Primaria', '2do'): ('Primaria', '3ro'),
+    ('Primaria', '3ro'): ('Primaria', '4to'),
+    ('Primaria', '4to'): ('Primaria', '5to'),
+    ('Primaria', '5to'): ('Primaria', '6to'),
+}
+
+
+def next_grade_for(student):
+    return GRADE_FLOW.get((student.etapa, student.grado))
 
 
 def agregar_errores_formulario(request, *forms):
@@ -74,9 +95,10 @@ def add_student(request):
                 student = student_form.save(commit=False)
                 student.parent = parent
                 student.save()
+                config = SchoolConfiguration.get_solo()
                 Enrollment.objects.create(
                     student=student,
-                    academic_year='2025-2026',
+                    academic_year=config.active_academic_year,
                     etapa=student.etapa,
                     grado=student.grado,
                     section=student.section,
@@ -129,7 +151,17 @@ def student_list(request):
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def student_detail(request, slug):
     student = get_object_or_404(filtrar_estudiantes_por_rol(request.user, Student.objects.select_related('parent')), slug=slug)
-    return render(request, 'estudiante/detalle-estudiante.html', {'student': student})
+    enrollments = student.enrollment_set.all()
+    documents = getattr(student, 'documents', None)
+    health_record = getattr(student, 'health_record', None)
+    attendance = student.attendance_records.all()[:10]
+    return render(request, 'estudiante/detalle-estudiante.html', {
+        'student': student,
+        'enrollments': enrollments,
+        'documents': documents,
+        'health_record': health_record,
+        'attendance': attendance,
+    })
 
 
 # =========================
@@ -228,7 +260,7 @@ def constancia_inscripcion(request, slug):
             report_type=Constancia.TIPO_INSCRIPCION,
             student=student,
             issued_by=request.user,
-            academic_year=enrollment.academic_year if enrollment else '2025-2026',
+            academic_year=enrollment.academic_year if enrollment else SchoolConfiguration.get_solo().active_academic_year,
             amount_paid=enrollment.monto_inscripcion if enrollment else None,
         )
         return redirect('constancia_detail', pk=constancia.pk)
@@ -238,3 +270,132 @@ def constancia_inscripcion(request, slug):
         'parent': student.parent,
         'enrollment': enrollment,
     })
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestion_escolar, login_url='iniciar_sesion')
+def school_operations_dashboard(request):
+    config = SchoolConfiguration.get_solo()
+    enrollments = Enrollment.objects.filter(academic_year=config.active_academic_year)
+    return render(request, 'estudiante/gestion-escolar.html', {
+        'active_year': config.active_academic_year,
+        'students_count': Student.objects.count(),
+        'active_enrollments': enrollments.filter(result_status=Enrollment.STATUS_ACTIVE).count(),
+        'without_documents': Student.objects.filter(documents__isnull=True).count(),
+        'attendance_absences': AttendanceRecord.objects.filter(academic_year=config.active_academic_year, status__in=[AttendanceRecord.STATUS_ABSENT, AttendanceRecord.STATUS_JUSTIFIED]).count(),
+        'by_grade': enrollments.values('etapa', 'grado', 'section').annotate(total=Count('id')).order_by('etapa', 'grado', 'section'),
+    })
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestion_escolar, login_url='iniciar_sesion')
+def capacity_list(request):
+    capacities = GradeSectionCapacity.objects.all()
+    form = GradeSectionCapacityForm(request.POST or None, initial={'academic_year': SchoolConfiguration.get_solo().active_academic_year})
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Cupo guardado correctamente.')
+        return redirect('capacity_list')
+    return render(request, 'estudiante/cupos.html', {'capacities': capacities, 'form': form})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestionar_estudiantes, login_url='iniciar_sesion')
+def student_documents(request, slug):
+    student = get_object_or_404(filtrar_estudiantes_por_rol(request.user, Student.objects.all()), slug=slug)
+    record, _ = StudentDocumentChecklist.objects.get_or_create(student=student)
+    form = StudentDocumentChecklistForm(request.POST or None, instance=record)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Documentos actualizados.')
+        return redirect('student_detail', slug=student.slug)
+    return render(request, 'estudiante/form-escolar.html', {'form': form, 'title': 'Documentos del estudiante', 'student': student})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestionar_estudiantes, login_url='iniciar_sesion')
+def student_health(request, slug):
+    student = get_object_or_404(filtrar_estudiantes_por_rol(request.user, Student.objects.all()), slug=slug)
+    record, _ = StudentHealthRecord.objects.get_or_create(student=student)
+    form = StudentHealthRecordForm(request.POST or None, instance=record)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Ficha medica actualizada.')
+        return redirect('student_detail', slug=student.slug)
+    return render(request, 'estudiante/form-escolar.html', {'form': form, 'title': 'Ficha medica', 'student': student})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestionar_estudiantes, login_url='iniciar_sesion')
+def attendance_list(request):
+    config = SchoolConfiguration.get_solo()
+    records = AttendanceRecord.objects.select_related('student', 'recorded_by').filter(academic_year=request.GET.get('ano') or config.active_academic_year)
+    status = request.GET.get('estado', '')
+    if status:
+        records = records.filter(status=status)
+    form = AttendanceRecordForm(request.POST or None, initial={'academic_year': config.active_academic_year})
+    form.fields['student'].queryset = filtrar_estudiantes_por_rol(request.user, Student.objects.all())
+    if request.method == 'POST' and form.is_valid():
+        attendance = form.save(commit=False)
+        attendance.recorded_by = request.user
+        attendance.save()
+        messages.success(request, 'Asistencia registrada.')
+        return redirect('attendance_list')
+    return render(request, 'estudiante/asistencia.html', {'records': records, 'form': form, 'status': status, 'status_choices': AttendanceRecord.STATUS_CHOICES})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestion_escolar, login_url='iniciar_sesion')
+def school_year_closure(request):
+    config = SchoolConfiguration.get_solo()
+    default_next = ''
+    if '-' in config.active_academic_year:
+        start, end = config.active_academic_year.split('-', 1)
+        if start.isdigit() and end.isdigit():
+            default_next = f'{int(start)+1}-{int(end)+1}'
+    form = SchoolYearClosureForm(request.POST or None, initial={
+        'current_academic_year': config.active_academic_year,
+        'next_academic_year': default_next,
+    })
+    preview = Enrollment.objects.select_related('student').filter(academic_year=config.active_academic_year, result_status=Enrollment.STATUS_ACTIVE)
+    if request.method == 'POST' and form.is_valid():
+        current_year = form.cleaned_data['current_academic_year']
+        next_year = form.cleaned_data['next_academic_year']
+        default_section = form.cleaned_data['default_section']
+        promoted = repeated = graduated = 0
+        with transaction.atomic():
+            enrollments = Enrollment.objects.select_related('student').filter(academic_year=current_year, result_status=Enrollment.STATUS_ACTIVE)
+            for enrollment in enrollments:
+                student = enrollment.student
+                next_grade = next_grade_for(student)
+                if not next_grade:
+                    enrollment.result_status = Enrollment.STATUS_GRADUATED
+                    enrollment.status = Enrollment.STATUS_GRADUATED
+                    enrollment.next_academic_year = next_year
+                    enrollment.save(update_fields=['result_status', 'status', 'next_academic_year'])
+                    graduated += 1
+                    continue
+                target_etapa, target_grado = next_grade
+                enrollment.result_status = Enrollment.STATUS_PROMOTED
+                enrollment.status = Enrollment.STATUS_PROMOTED
+                enrollment.next_academic_year = next_year
+                enrollment.save(update_fields=['result_status', 'status', 'next_academic_year'])
+                Student.objects.filter(pk=student.pk).update(etapa=target_etapa, grado=target_grado, section=default_section)
+                Enrollment.objects.get_or_create(
+                    student=student,
+                    academic_year=next_year,
+                    defaults={
+                        'etapa': target_etapa,
+                        'grado': target_grado,
+                        'section': default_section,
+                        'monto_inscripcion': 0,
+                    },
+                )
+                promoted += 1
+            if form.cleaned_data['close_grades']:
+                AcademicGrade.objects.filter(academic_year=current_year).update(is_locked=True)
+            config.active_academic_year = next_year
+            config.save(update_fields=['active_academic_year', 'updated_at'])
+        messages.success(request, f'Cierre completado. Promovidos: {promoted}. Egresados: {graduated}. Repite: {repeated}.')
+        return redirect('school_operations_dashboard')
+    return render(request, 'estudiante/cierre-anual.html', {'form': form, 'preview': preview})

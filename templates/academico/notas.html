@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block titulo %}Notas{% endblock %}
+{% block titulo_pagina %}Notas{% endblock %}
+{% block subtitulo_pagina %}Carga y consulta de calificaciones{% endblock %}
+{% block contenido %}
+<div class="s-card mb-3">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-10"><label class="form-label">Buscar</label><input class="form-control" name="q" value="{{ query }}" placeholder="Estudiante, cedula escolar o materia"></div>
+    <div class="col-md-2"><button class="s-btn s-btn-primario w-100" type="submit"><i class="fas fa-search"></i> Filtrar</button></div>
+  </form>
+</div>
+<div class="s-card">
+  <div class="s-card-header"><h5 class="s-card-titulo">Notas</h5><div class="d-flex gap-2">{% if user.is_admin or user.is_teacher %}<a href="{% url 'grade_create' %}" class="s-btn s-btn-primario">Cargar nota</a>{% endif %}<a href="{% url 'export_grades_excel' %}" class="s-btn s-btn-secundario">Exportar Excel</a></div></div>
+  {% include 'academico/tabla_notas.html' %}
+  {% if page_obj.has_other_pages %}
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <span class="text-muted small">Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    <div class="d-flex gap-2">
+      {% if page_obj.has_previous %}<a class="s-btn s-btn-secundario" href="?q={{ query }}&page={{ page_obj.previous_page_number }}"><i class="fas fa-chevron-left"></i></a>{% endif %}
+      {% if page_obj.has_next %}<a class="s-btn s-btn-secundario" href="?q={{ query }}&page={{ page_obj.next_page_number }}"><i class="fas fa-chevron-right"></i></a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

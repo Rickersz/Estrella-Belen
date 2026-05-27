@@ -1,0 +1,19 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block page_title %}Invitacion no disponible{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'assets/css/estilo.css' %}">{% endblock %}
+
+{% block body %}
+<div class="login-bg"><div class="grid-lines"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
+<div class="login-page login-page-wrapper">
+  <div class="login-card" style="max-width:500px;min-height:auto">
+    <div class="login-panel-right" style="flex:1;padding:46px 44px;text-align:center">
+      <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belen" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,0.04);padding:6px">
+      <h1 class="login-form-title" style="font-size:1.45rem;margin-top:14px">Invitacion no disponible</h1>
+      <p class="login-form-subtitle">Este enlace ya fue usado, cancelado o vencio. Solicita a la institucion que reenvie la invitacion.</p>
+      <a href="{% url 'iniciar_sesion' %}" class="btn-login" style="text-decoration:none"><span><i class="fas fa-arrow-left me-2"></i>Ir al inicio de sesion</span></a>
+    </div>
+  </div>
+</div>
+{% endblock %}

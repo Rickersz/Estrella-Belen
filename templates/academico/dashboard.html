@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block titulo %}Academico{% endblock %}
+{% block titulo_pagina %}Academico{% endblock %}
+{% block subtitulo_pagina %}Boletines, notas, horario y comunicacion{% endblock %}
+{% block contenido %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="s-stat-card"><div class="s-stat-icono"><i class="fas fa-user-graduate"></i></div><div><div class="s-stat-valor">{{ students_count }}</div><div class="s-stat-label">Estudiantes</div></div></div></div>
+  <div class="col-md-3"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-star"></i></div><div><div class="s-stat-valor">{{ grades_count }}</div><div class="s-stat-label">Notas</div></div></div></div>
+  <div class="col-md-3"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-chart-line"></i></div><div><div class="s-stat-valor">{{ average_grade|floatformat:1 }}</div><div class="s-stat-label">Promedio</div></div></div></div>
+  <div class="col-md-3"><div class="s-stat-card"><div class="s-stat-icono turquesa"><i class="fas fa-calendar"></i></div><div><div class="s-stat-valor">{{ events_count }}</div><div class="s-stat-label">Eventos</div></div></div></div>
+</div>
+<div class="s-card mb-4">
+  <div class="s-card-header"><h5 class="s-card-titulo">Accesos academicos</h5></div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="s-btn s-btn-secundario" href="{% url 'grade_list' %}"><i class="fas fa-star"></i> Notas</a>
+    <a class="s-btn s-btn-secundario" href="{% url 'academic_history' %}"><i class="fas fa-history"></i> Historial</a>
+    <a class="s-btn s-btn-secundario" href="{% url 'schedule_list' %}"><i class="fas fa-clock"></i> Horario</a>
+    <a class="s-btn s-btn-secundario" href="{% url 'calendar_list' %}"><i class="fas fa-calendar"></i> Calendario</a>
+    <a class="s-btn s-btn-secundario" href="{% url 'observation_list' %}"><i class="fas fa-exclamation-circle"></i> Disciplina</a>
+    <a class="s-btn s-btn-secundario" href="{% url 'announcement_list' %}"><i class="fas fa-bullhorn"></i> Anuncios</a>
+    <a class="s-btn s-btn-secundario" href="{% url 'export_grades_excel' %}"><i class="fas fa-file-excel"></i> Excel</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-7"><div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Notas recientes</h5></div>{% include 'academico/tabla_notas.html' with grades=recent_grades %}</div></div>
+  <div class="col-lg-5"><div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Anuncios</h5></div>{% for a in announcements %}<div style="padding:12px;border-bottom:1px solid var(--s-borde)"><strong>{{ a.title }}</strong><br><span style="color:var(--s-suave)">{{ a.published_at|date:"d/m/Y H:i" }}</span></div>{% empty %}<div style="padding:30px;text-align:center">Sin anuncios</div>{% endfor %}</div></div>
+</div>
+{% endblock %}

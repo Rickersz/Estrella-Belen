@@ -23,6 +23,23 @@
         <div class="col-md-6"><strong>Saldo pendiente:</strong> {{ payment.balance }}</div>
         <div class="col-md-6"><strong>Estado:</strong> {{ payment.get_status_display }}</div>
         <div class="col-md-6"><strong>Referencia:</strong> {{ payment.reference|default:"-" }}</div>
+        <div class="col-md-6"><strong>Revision:</strong> {{ payment.get_verification_status_display }}</div>
+        {% if payment.verification_status == 'pendiente_revision' %}
+        <div class="col-md-6"><strong>Monto reportado:</strong> {{ payment.reported_amount }}</div>
+        <div class="col-md-6"><strong>Referencia reportada:</strong> {{ payment.reported_reference|default:"-" }}</div>
+        {% endif %}
     </div>
+    {% if user.is_admin and payment.verification_status == 'pendiente_revision' %}
+    <div class="d-flex gap-2 mt-4">
+        <form method="post" action="{% url 'approve_reported_payment' payment.pk %}">
+            {% csrf_token %}
+            <button class="s-btn s-btn-exito" type="submit"><i class="fas fa-check"></i> Aprobar reporte</button>
+        </form>
+        <form method="post" action="{% url 'reject_reported_payment' payment.pk %}">
+            {% csrf_token %}
+            <button class="s-btn s-btn-secundario" type="submit"><i class="fas fa-times"></i> Rechazar</button>
+        </form>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

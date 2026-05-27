@@ -1,0 +1,33 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block page_title %}Activar Portal de Padres{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'assets/css/estilo.css' %}">{% endblock %}
+
+{% block body %}
+<div class="login-bg"><div class="grid-lines"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
+<div class="login-page login-page-wrapper">
+  <div class="login-card" style="max-width:520px;min-height:auto">
+    <div class="login-panel-right" style="flex:1;padding:46px 44px">
+      <div class="login-form-wrap" style="max-width:100%">
+        <div style="text-align:center;margin-bottom:24px">
+          <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belen" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,0.04);padding:6px">
+          <h1 class="login-form-title" style="font-size:1.45rem;margin-top:14px">Activar Portal de Padres</h1>
+          <p class="login-form-subtitle">Crea tu contraseña para acceder a la informacion de tus estudiantes.</p>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="login-field-group">
+            <label class="login-field-label">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="login-alert mt-2">{{ error }}</div>{% endfor %}
+          </div>
+          {% endfor %}
+          <button class="btn-login" type="submit"><span><i class="fas fa-check-circle me-2"></i>Activar acceso</span></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

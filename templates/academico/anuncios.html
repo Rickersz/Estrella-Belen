@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block titulo %}Anuncios{% endblock %}
+{% block titulo_pagina %}Anuncios institucionales{% endblock %}
+{% block subtitulo_pagina %}Comunicados para la comunidad escolar{% endblock %}
+{% block contenido %}
+<div class="s-card"><div class="s-card-header"><h5 class="s-card-titulo">Anuncios</h5>{% if user.is_admin %}<a href="{% url 'announcement_create' %}" class="s-btn s-btn-primario">Publicar</a>{% endif %}</div>
+{% for a in announcements %}<div style="padding:14px;border-bottom:1px solid var(--s-borde)"><strong>{{ a.title }}</strong> <span class="s-badge s-badge-azul">{{ a.get_audience_display }}</span><br><span style="color:var(--s-suave)">{{ a.published_at|date:"d/m/Y H:i" }}</span><p style="margin:8px 0 0">{{ a.body }}</p></div>{% empty %}<div style="padding:30px;text-align:center">Sin anuncios</div>{% endfor %}</div>
+{% endblock %}

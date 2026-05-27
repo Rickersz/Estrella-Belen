@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Solicitudes de acceso{% endblock %}
+{% block titulo_pagina %}Solicitudes de acceso{% endblock %}
+{% block subtitulo_pagina %}Revision manual antes de crear cuentas{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-sm-6"><div class="s-stat-card"><div class="s-stat-icono dorado"><i class="fas fa-inbox"></i></div><div><div class="s-stat-valor">{{ pending_count }}</div><div class="s-stat-label">Pendientes</div></div></div></div>
+</div>
+
+<div class="s-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-7"><label class="form-label">Buscar</label><input class="form-control" name="q" value="{{ query }}" placeholder="Nombre, estudiante, correo, cedula o telefono"></div>
+        <div class="col-md-3"><label class="form-label">Estado</label><select class="form-control" name="estado"><option value="">Todos</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><button class="s-btn s-btn-primario w-100" type="submit"><i class="fas fa-search"></i> Filtrar</button></div>
+    </form>
+</div>
+
+<div class="s-card">
+    <div class="s-card-header"><h5 class="s-card-titulo">Solicitudes recibidas</h5></div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead>
+                <tr>
+                    <th>Solicitante</th>
+                    <th>Estudiante</th>
+                    <th>Contacto</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests_qs %}
+                <tr>
+                    <td><strong>{{ req.full_name }}</strong><div class="text-muted small">{{ req.relationship }} | {{ req.document_id|default:"Sin cedula" }}</div>{% if req.message %}<div class="text-muted small">{{ req.message }}</div>{% endif %}</td>
+                    <td>{{ req.student_name }}<div class="text-muted small">{{ req.student_grade|default:"Grado no indicado" }}</div></td>
+                    <td>{{ req.email }}<div class="text-muted small">{{ req.phone }}</div></td>
+                    <td><span class="s-badge {% if req.status == 'pendiente' %}s-badge-dorado{% elif req.status == 'aprobada' %}s-badge-verde{% else %}s-badge-azul{% endif %}">{{ req.get_status_display }}</span></td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end flex-wrap gap-1">
+                            <form method="post" action="{% url 'update_access_request_status' req.pk 'revisada' %}">{% csrf_token %}<button class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem" type="submit">Revisada</button></form>
+                            <form method="post" action="{% url 'update_access_request_status' req.pk 'aprobada' %}">{% csrf_token %}<button class="s-btn s-btn-exito" style="padding:4px 10px;font-size:0.75rem" type="submit">Aprobar</button></form>
+                            <form method="post" action="{% url 'update_access_request_status' req.pk 'rechazada' %}">{% csrf_token %}<button class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem" type="submit">Rechazar</button></form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;color:var(--s-suave);padding:30px">No hay solicitudes</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

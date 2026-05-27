@@ -1,3 +1,5 @@
+import calendar
+
 from django import forms
 from django.utils import timezone
 
@@ -44,13 +46,25 @@ class PaymentForm(forms.ModelForm):
 class RepresentativePaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
-        fields = ['amount_paid', 'payment_date', 'reference', 'notes']
+        fields = ['reported_amount', 'payment_date', 'reported_reference', 'notes']
+        labels = {
+            'reported_amount': 'Monto reportado',
+            'reported_reference': 'Referencia',
+        }
         widgets = {
-            'amount_paid': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'reported_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'reference': forms.TextInput(attrs={'class': 'form-control'}),
+            'reported_reference': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+    def clean_reported_amount(self):
+        amount = self.cleaned_data['reported_amount']
+        if amount <= 0:
+            raise forms.ValidationError('El monto reportado debe ser mayor a cero.')
+        if self.instance and self.instance.balance and amount > self.instance.balance:
+            raise forms.ValidationError('El monto reportado no puede ser mayor al saldo pendiente.')
+        return amount
 
 
 class PaymentConfigForm(forms.ModelForm):
@@ -72,3 +86,33 @@ class PaymentConfigForm(forms.ModelForm):
         if due_day < 1 or due_day > 31:
             raise forms.ValidationError('El dia de vencimiento debe estar entre 1 y 31.')
         return due_day
+
+
+class PaymentGenerationForm(forms.Form):
+    config = forms.ModelChoiceField(
+        queryset=PaymentConfig.objects.filter(is_active=True),
+        label='Concepto configurado',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    month = forms.IntegerField(
+        label='Mes',
+        min_value=1,
+        max_value=12,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '12'})
+    )
+    year = forms.IntegerField(
+        label='Ano',
+        min_value=2000,
+        max_value=2100,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '2000', 'max': '2100'})
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        config = cleaned.get('config')
+        month = cleaned.get('month')
+        year = cleaned.get('year')
+        if config and month and year:
+            last_day = calendar.monthrange(year, month)[1]
+            cleaned['due_date'] = timezone.datetime(year, month, min(config.due_day, last_day)).date()
+        return cleaned

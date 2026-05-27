@@ -8,6 +8,7 @@
                 <th>Pagado</th>
                 <th>Saldo</th>
                 <th>Estado</th>
+                <th>Revision</th>
                 <th class="text-end">Acciones</th>
             </tr>
         </thead>
@@ -20,13 +21,24 @@
                 <td>{{ payment.amount_paid }}</td>
                 <td>{{ payment.balance }}</td>
                 <td><span class="s-badge {% if payment.status == 'pagado' %}s-badge-verde{% elif payment.status == 'vencido' %}s-badge-dorado{% else %}s-badge-azul{% endif %}">{{ payment.get_status_display }}</span></td>
+                <td>
+                    {% if payment.verification_status == 'pendiente_revision' %}
+                    <span class="s-badge s-badge-dorado">Pendiente</span>
+                    {% elif payment.verification_status == 'aprobado' %}
+                    <span class="s-badge s-badge-verde">Verificado</span>
+                    {% elif payment.verification_status == 'rechazado' %}
+                    <span class="s-badge s-badge-dorado">Rechazado</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
                 <td class="text-end">
                     <a href="{% url 'payment_detail' payment.pk %}" class="s-btn s-btn-secundario" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-eye"></i></a>
                     <a href="{% url 'payment_receipt_pdf' payment.pk %}" class="s-btn s-btn-exito" style="padding:4px 10px;font-size:0.75rem"><i class="fas fa-download"></i></a>
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="7" style="text-align:center;color:var(--s-suave);padding:30px">No hay pagos registrados</td></tr>
+            <tr><td colspan="8" style="text-align:center;color:var(--s-suave);padding:30px">No hay pagos registrados</td></tr>
             {% endfor %}
         </tbody>
     </table>
