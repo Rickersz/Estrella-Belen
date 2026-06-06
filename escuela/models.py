@@ -5,6 +5,10 @@ from django.utils.crypto import get_random_string
 import uuid
 # Create your models here.
 
+
+def active_academic_year_default():
+    return SchoolConfiguration.get_solo().active_academic_year
+
 class Notification(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -20,11 +24,13 @@ class SchoolConfiguration(models.Model):
     institution_name = models.CharField(max_length=180, default='Unidad Educativa Estrella de Belen')
     active_academic_year = models.CharField(max_length=9, default='2025-2026')
     director_name = models.CharField(max_length=120, blank=True)
+    director_document = models.CharField(max_length=40, blank=True)
     rif = models.CharField(max_length=40, blank=True)
     dea_code = models.CharField(max_length=40, blank=True)
     phone = models.CharField(max_length=40, blank=True)
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
+    report_footer = models.TextField(blank=True)
     payment_reminder_days = models.PositiveSmallIntegerField(default=3)
     updated_at = models.DateTimeField(auto_now=True)
 

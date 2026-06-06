@@ -217,7 +217,7 @@ def generate_recurring_payments(request):
     if request.method == 'POST' and form.is_valid():
         config = form.cleaned_data['config']
         due_date = form.cleaned_data['due_date']
-        students = Student.objects.select_related('parent').all()
+        students = Student.objects.select_related('parent').filter(is_archived=False)
         for student in students:
             _, was_created = Payment.objects.get_or_create(
                 student=student,
@@ -243,7 +243,7 @@ def generate_recurring_payments(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(can_manage_payments, login_url='iniciar_sesion')
 def solvent_students(request):
-    students = Student.objects.select_related('parent').annotate(
+    students = Student.objects.select_related('parent').filter(is_archived=False).annotate(
         open_payments=Count('payments', filter=Q(payments__balance__gt=0))
     ).filter(open_payments=0)
     return render(request, 'pagos/estudiantes_estado.html', {'students': students, 'title': 'Estudiantes solventes'})
@@ -252,7 +252,7 @@ def solvent_students(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(can_manage_payments, login_url='iniciar_sesion')
 def delinquent_students(request):
-    students = Student.objects.select_related('parent').filter(payments__status=Payment.STATUS_OVERDUE).distinct()
+    students = Student.objects.select_related('parent').filter(is_archived=False, payments__status=Payment.STATUS_OVERDUE).distinct()
     return render(request, 'pagos/estudiantes_estado.html', {'students': students, 'title': 'Estudiantes morosos'})
 
 

@@ -1,9 +1,41 @@
 from django import forms
 
 from .models import AcademicGrade, Announcement, ClassSchedule, CommunicationMessage, DisciplineObservation, SchoolEvent
+from .utils import is_admin, teacher_for_user, teacher_sections
+from escuela.validators import validate_academic_year
+from estudiante.models import Student
+from materia.models import Subject
+from profesor.models import Teacher
 
 
 class AcademicGradeForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        if not user:
+            return
+
+        if is_admin(user):
+            self.fields['student'].queryset = Student.objects.filter(is_archived=False)
+            return
+
+        if getattr(user, 'is_teacher', False):
+            teacher = teacher_for_user(user)
+            sections = teacher_sections(user)
+            self.fields['student'].queryset = Student.objects.filter(is_archived=False, section__in=sections) if sections else Student.objects.none()
+            self.fields['teacher'].queryset = Teacher.objects.filter(pk=teacher.pk) if teacher else Teacher.objects.none()
+            self.fields['subject'].queryset = Subject.objects.filter(
+                classteacherassignment__teacher=teacher,
+                classteacherassignment__is_active=True,
+            ).distinct() if teacher else Subject.objects.none()
+            self.fields.pop('is_locked', None)
+            return
+
+        self.fields['student'].queryset = Student.objects.none()
+        self.fields['teacher'].queryset = Teacher.objects.none()
+        self.fields['subject'].queryset = Subject.objects.none()
+        self.fields.pop('is_locked', None)
+
     class Meta:
         model = AcademicGrade
         fields = ['student', 'subject', 'teacher', 'academic_year', 'period', 'grade', 'weight', 'qualitative', 'notes', 'is_locked']
@@ -31,6 +63,9 @@ class AcademicGradeForm(forms.ModelForm):
         if weight <= 0 or weight > 100:
             raise forms.ValidationError('La ponderacion debe estar entre 1 y 100.')
         return weight
+
+    def clean_academic_year(self):
+        return validate_academic_year(self.cleaned_data['academic_year'])
 
 
 class ScheduleForm(forms.ModelForm):
@@ -63,6 +98,23 @@ class SchoolEventForm(forms.ModelForm):
 
 
 class DisciplineObservationForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not user or is_admin(user):
+            if user and is_admin(user):
+                self.fields['student'].queryset = Student.objects.filter(is_archived=False)
+            return
+
+        if getattr(user, 'is_teacher', False):
+            teacher = teacher_for_user(user)
+            sections = teacher_sections(user)
+            self.fields['student'].queryset = Student.objects.filter(is_archived=False, section__in=sections) if sections else Student.objects.none()
+            self.fields['teacher'].queryset = Teacher.objects.filter(pk=teacher.pk) if teacher else Teacher.objects.none()
+            return
+
+        self.fields['student'].queryset = Student.objects.none()
+        self.fields['teacher'].queryset = Teacher.objects.none()
+
     class Meta:
         model = DisciplineObservation
         fields = ['student', 'teacher', 'date', 'severity', 'description', 'action_taken']

@@ -10,8 +10,10 @@ from .forms import AttendanceRecordForm, EnrollmentForm, GradeSectionCapacityFor
 from .models import AttendanceRecord, Enrollment, GradeSectionCapacity, Parent, Student, StudentDocumentChecklist, StudentHealthRecord
 from escuela.views import create_notification
 from escuela.models import ClassTeacherAssignment, SchoolConfiguration
+from escuela.audit import log_audit
 from profesor.models import Teacher
 from reportes.models import Constancia
+from reportes.views import datos_institucionales
 from academico.models import AcademicGrade
 
 
@@ -67,6 +69,7 @@ def secciones_asignadas_profesor(user):
 
 
 def filtrar_estudiantes_por_rol(user, queryset):
+    queryset = queryset.filter(is_archived=False)
     if getattr(user, 'is_admin', False):
         return queryset
     if getattr(user, 'is_teacher', False):
@@ -109,7 +112,7 @@ def add_student(request):
             return redirect('constancia_inscripcion', slug=student.slug)
 
         agregar_errores_formulario(request, student_form, parent_form, enrollment_form)
-        messages.error(request, 'Revisa los datos ingresados e intÃ©ntalo nuevamente.')
+        messages.error(request, 'Revisa los datos ingresados e intentalo nuevamente.')
 
     return render(request, "estudiante/agregar-estudiante.html")
 
@@ -121,7 +124,7 @@ def add_student(request):
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
 def student_list(request):
     students = filtrar_estudiantes_por_rol(request.user, Student.objects.select_related('parent').all())
-     # ðŸ”Ž SEARCH
+    # SEARCH
     query = request.GET.get('q')
     if query:
         students = students.filter(
@@ -130,7 +133,7 @@ def student_list(request):
             Q(student_id__icontains=query)
         )
 
-    # ðŸŽ¯ FILTERS
+    # FILTERS
     etapa = request.GET.get('etapa')
     grado = request.GET.get('grado')
 
@@ -208,10 +211,32 @@ def edit_student(request, slug):
 def delete_student(request, slug):
     if request.method == 'POST':
         student = get_object_or_404(Student, slug=slug)
-        student.delete()
-        messages.success(request, 'Estudiante eliminado correctamente.')
+        student.is_archived = True
+        student.save(update_fields=['is_archived'])
+        log_audit(request, 'archivar_estudiante', student, f'Archivo estudiante {student}.')
+        messages.success(request, 'Estudiante archivado correctamente.')
         return redirect('student_list')
 
+    return HttpResponseForbidden()
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_eliminar_estudiantes, login_url='iniciar_sesion')
+def archived_students(request):
+    students = Student.objects.select_related('parent').filter(is_archived=True).order_by('last_name', 'first_name')
+    return render(request, 'estudiante/archivados.html', {'students': students})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_eliminar_estudiantes, login_url='iniciar_sesion')
+def restore_student(request, slug):
+    if request.method == 'POST':
+        student = get_object_or_404(Student, slug=slug, is_archived=True)
+        student.is_archived = False
+        student.save(update_fields=['is_archived'])
+        log_audit(request, 'restaurar_estudiante', student, f'Restauro estudiante {student}.')
+        messages.success(request, 'Estudiante restaurado correctamente.')
+        return redirect('archived_students')
     return HttpResponseForbidden()
 
 
@@ -221,17 +246,18 @@ def delete_student(request, slug):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_gestionar_estudiantes, login_url='iniciar_sesion')
 def download_students_csv(request):
-    response = HttpResponse(content_type='text/csv')
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="estudiantes.csv"'
 
     writer = csv.writer(response)
     writer.writerow([
-        'CÃ©dula escolar', 'Nombres', 'Apellidos',
-        'Etapa', 'Grado', 'SecciÃ³n',
-        'GÃ©nero', 'Fecha de nacimiento', 'NÃºmero de admisiÃ³n'
+        'Cedula escolar', 'Nombres', 'Apellidos',
+        'Etapa', 'Grado', 'Seccion',
+        'Genero', 'Fecha de nacimiento', 'Numero de admision'
     ])
 
-    for student in Student.objects.all():
+    students = filtrar_estudiantes_por_rol(request.user, Student.objects.all())
+    for student in students:
         writer.writerow([
             student.student_id,
             student.first_name,
@@ -248,7 +274,7 @@ def download_students_csv(request):
 
 
 # =========================
-# CONSTANCIA DE INSCRIPCIÃ“N
+# CONSTANCIA DE INSCRIPCION
 # =========================
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_estudiantes, login_url='iniciar_sesion')
@@ -269,6 +295,8 @@ def constancia_inscripcion(request, slug):
         'student': student,
         'parent': student.parent,
         'enrollment': enrollment,
+        'institucion': datos_institucionales(),
+        'active_academic_year': SchoolConfiguration.get_solo().active_academic_year,
     })
 
 
@@ -279,9 +307,9 @@ def school_operations_dashboard(request):
     enrollments = Enrollment.objects.filter(academic_year=config.active_academic_year)
     return render(request, 'estudiante/gestion-escolar.html', {
         'active_year': config.active_academic_year,
-        'students_count': Student.objects.count(),
+        'students_count': Student.objects.filter(is_archived=False).count(),
         'active_enrollments': enrollments.filter(result_status=Enrollment.STATUS_ACTIVE).count(),
-        'without_documents': Student.objects.filter(documents__isnull=True).count(),
+        'without_documents': Student.objects.filter(is_archived=False, documents__isnull=True).count(),
         'attendance_absences': AttendanceRecord.objects.filter(academic_year=config.active_academic_year, status__in=[AttendanceRecord.STATUS_ABSENT, AttendanceRecord.STATUS_JUSTIFIED]).count(),
         'by_grade': enrollments.values('etapa', 'grado', 'section').annotate(total=Count('id')).order_by('etapa', 'grado', 'section'),
     })

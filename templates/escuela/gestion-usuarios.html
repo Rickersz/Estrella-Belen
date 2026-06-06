@@ -1,54 +1,162 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Gestión de Usuarios{% endblock %}
-{% block titulo_pagina %}Gestión de Usuarios{% endblock %}
+{% block titulo %}Gestion de Usuarios{% endblock %}
+{% block titulo_pagina %}Gestion de Usuarios{% endblock %}
+{% block subtitulo_pagina %}Cuentas de acceso, roles y permisos del sistema{% endblock %}
 
 {% block contenido %}
-<div class="s-card">
-    <div class="s-card-header"><h5>Crear Usuario</h5></div>
-    <div class="s-card-body">
-        <form method="post">
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-md-4">{{ form.email.label_tag }}{{ form.email }}</div>
-                <div class="col-md-4">{{ form.first_name.label_tag }}{{ form.first_name }}</div>
-                <div class="col-md-4">{{ form.last_name.label_tag }}{{ form.last_name }}</div>
+<div class="user-admin">
+    <form method="post" class="user-admin-create">
+        {% csrf_token %}
+        <div class="user-admin-head">
+            <div>
+                <span class="user-admin-kicker">Nuevo acceso</span>
+                <h2>Crear usuario</h2>
             </div>
-            <div class="row mt-2">
-                <div class="col-md-4">{{ form.password.label_tag }}{{ form.password }}</div>
-                <div class="col-md-4">{{ form.confirm_password.label_tag }}{{ form.confirm_password }}</div>
-                <div class="col-md-4">{{ form.is_admin.label_tag }}{{ form.is_admin }}</div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-md-4">{{ form.is_student.label_tag }}{{ form.is_student }}</div>
-                <div class="col-md-4">{{ form.is_teacher.label_tag }}{{ form.is_teacher }}</div>
-                <div class="col-md-4">{{ form.is_representative.label_tag }}{{ form.is_representative }}</div>
-                <div class="col-md-4">{{ form.is_active.label_tag }}{{ form.is_active }}</div>
-            </div>
-            <div class="mt-3">
-                <button class="btn btn-primary" type="submit">Crear usuario</button>
-            </div>
-        </form>
-    </div>
-</div>
+            <button class="s-btn s-btn-primario" type="submit">
+                <i class="fas fa-user-plus"></i> Crear usuario
+            </button>
+        </div>
 
-<div class="s-card mt-4">
-    <div class="s-card-header"><h5>Lista de Usuarios</h5></div>
-    <div class="s-card-body">
-        <table class="s-tabla">
-            <thead><tr><th>Email</th><th>Nombre</th><th>Roles</th><th>Activo</th><th>Acciones</th></tr></thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>{{ u.email }}</td>
-                    <td>{{ u.get_full_name|default:u.email }}</td>
-                    <td>{% if u.is_admin %}Admin {% endif %}{% if u.is_teacher %}Profesor {% endif %}{% if u.is_representative %}Representante {% endif %}{% if u.is_student %}Estudiante{% endif %}</td>
-                    <td>{{ u.is_active }}</td>
-                    <td><a href="{% url 'edit_user' u.id %}" class="btn btn-sm btn-secondary">Editar</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        {% if form.errors %}
+        <div class="user-admin-alert">
+            <i class="fas fa-circle-exclamation"></i>
+            <span>Revisa los campos marcados antes de guardar.</span>
+        </div>
+        {% endif %}
+
+        <div class="user-admin-grid">
+            <section class="user-admin-section">
+                <div class="user-admin-section-title">
+                    <i class="fas fa-id-card"></i>
+                    <div>
+                        <h3>Datos de acceso</h3>
+                        <p>El correo sera usado para iniciar sesion y recibir la verificacion.</p>
+                    </div>
+                </div>
+                <div class="user-admin-fields">
+                    <div class="user-field">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                        {% for error in form.email.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="user-field">
+                        {{ form.first_name.label_tag }}
+                        {{ form.first_name }}
+                        {% for error in form.first_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="user-field">
+                        {{ form.last_name.label_tag }}
+                        {{ form.last_name }}
+                        {% for error in form.last_name.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="user-field">
+                        {{ form.password.label_tag }}
+                        {{ form.password }}
+                        <div class="form-help">{{ form.password.help_text }}</div>
+                        {% for error in form.password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="user-field">
+                        {{ form.confirm_password.label_tag }}
+                        {{ form.confirm_password }}
+                        {% for error in form.confirm_password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                    </div>
+                    <label class="user-active">
+                        {{ form.is_active }}
+                        <span>
+                            <strong>Cuenta activa</strong>
+                            <small>Permite iniciar sesion despues de crear el usuario.</small>
+                        </span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="user-admin-section">
+                <div class="user-admin-section-title">
+                    <i class="fas fa-shield-halved"></i>
+                    <div>
+                        <h3>Roles</h3>
+                        <p>Selecciona solo los permisos que correspondan a la persona.</p>
+                    </div>
+                </div>
+                <div class="role-grid">
+                    <label class="role-card">
+                        {{ form.is_admin }}
+                        <span class="role-icon"><i class="fas fa-user-shield"></i></span>
+                        <span><strong>Administrador</strong><small>Acceso completo al sistema.</small></span>
+                    </label>
+                    <label class="role-card role-teacher">
+                        {{ form.is_teacher }}
+                        <span class="role-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                        <span><strong>Profesor</strong><small>Crea o vincula el perfil docente por correo.</small></span>
+                    </label>
+                    <label class="role-card">
+                        {{ form.is_representative }}
+                        <span class="role-icon"><i class="fas fa-user-friends"></i></span>
+                        <span><strong>Representante</strong><small>Portal de padres y pagos asociados.</small></span>
+                    </label>
+                    <label class="role-card">
+                        {{ form.is_student }}
+                        <span class="role-icon"><i class="fas fa-user-graduate"></i></span>
+                        <span><strong>Estudiante</strong><small>Acceso academico del alumno.</small></span>
+                    </label>
+                </div>
+            </section>
+        </div>
+    </form>
+
+    <section class="user-admin-list">
+        <div class="user-admin-head compact">
+            <div>
+                <span class="user-admin-kicker">Accesos activos</span>
+                <h2>Usuarios del sistema</h2>
+            </div>
+            <a href="{% url 'deactivated_users' %}" class="s-btn s-btn-secundario">
+                <i class="fas fa-user-slash"></i> Desactivados
+            </a>
+        </div>
+
+        <div class="s-tabla-wrap">
+            <table class="s-tabla user-table">
+                <thead>
+                    <tr><th>Correo</th><th>Nombre</th><th>Roles</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.email }}</td>
+                        <td>{{ u.get_full_name|default:u.email }}</td>
+                        <td>
+                            <div class="user-role-badges">
+                                {% if u.is_admin %}<span class="s-badge s-badge-dorado">Admin</span>{% endif %}
+                                {% if u.is_teacher %}<span class="s-badge s-badge-azul">Profesor</span>{% endif %}
+                                {% if u.is_representative %}<span class="s-badge s-badge-verde">Representante</span>{% endif %}
+                                {% if u.is_student %}<span class="s-badge s-badge-azul">Estudiante</span>{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                            <span class="s-badge s-badge-verde">Activo</span>
+                            {% else %}
+                            <span class="s-badge s-badge-rojo">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="user-actions">
+                                <a href="{% url 'edit_user' u.id %}" class="s-btn s-btn-secundario"><i class="fas fa-pen"></i></a>
+                                <form method="post" action="{% url 'delete_user' u.id %}">
+                                    {% csrf_token %}
+                                    <button class="s-btn s-btn-peligro" type="submit"><i class="fas fa-user-slash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center;padding:28px;color:var(--s-suave)">No hay usuarios activos.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 {% endblock %}

@@ -1,10 +1,12 @@
 from decimal import Decimal
 
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from autenticacion.models import CustomUser
+from escuela.models import Notification, SchoolConfiguration
 from estudiante.models import Parent, Student
 from .models import Payment
 
@@ -77,3 +79,16 @@ class PaymentPermissionTests(TestCase):
         self.client.force_login(self.teacher)
         response = self.client.get(reverse('payment_dashboard'))
         self.assertEqual(response.status_code, 302)
+
+    def test_comando_actualizar_pagos_crea_notificaciones(self):
+        config = SchoolConfiguration.get_solo()
+        config.payment_reminder_days = 5
+        config.save(update_fields=['payment_reminder_days'])
+        self.payment.due_date = timezone.localdate() - timezone.timedelta(days=1)
+        self.payment.save()
+
+        call_command('actualizar_pagos', verbosity=0)
+        self.payment.refresh_from_db()
+
+        self.assertEqual(self.payment.status, Payment.STATUS_OVERDUE)
+        self.assertTrue(Notification.objects.filter(user=self.rep_user).exists())

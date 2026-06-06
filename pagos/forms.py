@@ -3,16 +3,23 @@ import calendar
 from django import forms
 from django.utils import timezone
 
+from escuela.models import SchoolConfiguration
+from escuela.validators import validate_academic_year
 from estudiante.models import Student
 from .models import Payment, PaymentConfig
 
 
 class PaymentForm(forms.ModelForm):
     student = forms.ModelChoiceField(
-        queryset=Student.objects.select_related('parent').order_by('last_name', 'first_name'),
+        queryset=Student.objects.select_related('parent').filter(is_archived=False).order_by('last_name', 'first_name'),
         label='Estudiante',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound and not self.instance.pk:
+            self.fields['academic_year'].initial = SchoolConfiguration.get_solo().active_academic_year
 
     class Meta:
         model = Payment
@@ -42,6 +49,9 @@ class PaymentForm(forms.ModelForm):
             self.add_error('amount_paid', 'El monto pagado no puede ser mayor al monto a pagar.')
         return cleaned
 
+    def clean_academic_year(self):
+        return validate_academic_year(self.cleaned_data['academic_year'])
+
 
 class RepresentativePaymentForm(forms.ModelForm):
     class Meta:
@@ -68,6 +78,11 @@ class RepresentativePaymentForm(forms.ModelForm):
 
 
 class PaymentConfigForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound and not self.instance.pk:
+            self.fields['academic_year'].initial = SchoolConfiguration.get_solo().active_academic_year
+
     class Meta:
         model = PaymentConfig
         fields = ['name', 'academic_year', 'amount', 'due_day', 'allowed_days', 'is_active', 'notes']
@@ -86,6 +101,9 @@ class PaymentConfigForm(forms.ModelForm):
         if due_day < 1 or due_day > 31:
             raise forms.ValidationError('El dia de vencimiento debe estar entre 1 y 31.')
         return due_day
+
+    def clean_academic_year(self):
+        return validate_academic_year(self.cleaned_data['academic_year'])
 
 
 class PaymentGenerationForm(forms.Form):

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from reportlab.lib import colors
@@ -16,15 +16,17 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 
 from .forms import ConstanciaForm
 from .models import Constancia
+from escuela.models import SchoolConfiguration
+from estudiante.models import Student
 
 
-DIRECTORA = 'Glory Mar Acacio'
-DIRECTORA_CEDULA = '13.195.656'
-INSTITUCION = 'Unidad Educativa "BELEN"'
-CODIGO_DEA = 'PD0376105'
-RIF = 'J-02855662-0'
+DIRECTORA = 'Directora'
+DIRECTORA_CEDULA = ''
+INSTITUCION = 'Unidad Educativa Estrella de Belen'
+CODIGO_DEA = ''
+RIF = ''
 LUGAR = 'Bella Vista'
-DIRECCION_FOOTER = 'Calle Sucre Nro 04. Bella Vista Punto Fijo Estado Falcon. Tlf: 0412-6559890'
+DIRECCION_FOOTER = ''
 
 MESES = [
     '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -51,6 +53,23 @@ CENTENAS = {
 
 def can_manage_constancias(user):
     return (hasattr(user, 'is_admin') and user.is_admin) or (hasattr(user, 'is_teacher') and user.is_teacher)
+
+
+def representative_parent(user):
+    if hasattr(user, 'is_representative') and user.is_representative:
+        return getattr(user, 'representante', None)
+    return None
+
+
+def can_view_student_reports(user, student):
+    if can_manage_constancias(user):
+        return True
+    parent = representative_parent(user)
+    return bool(parent and student.parent_id == parent.id)
+
+
+def can_view_constancia(user, constancia):
+    return can_view_student_reports(user, constancia.student)
 
 
 def numero_a_letras(numero):
@@ -126,11 +145,25 @@ def representante(constancia):
     return 'REPRESENTANTE', constancia.representative_id or ''
 
 
-def cuerpo_constancia(constancia):
+def datos_institucionales():
+    config = SchoolConfiguration.get_solo()
+    return {
+        'directora': config.director_name or DIRECTORA,
+        'directora_cedula': config.director_document or DIRECTORA_CEDULA,
+        'institucion': config.institution_name or INSTITUCION,
+        'dea': config.dea_code or CODIGO_DEA,
+        'rif': config.rif or RIF,
+        'footer': config.report_footer or config.address or DIRECCION_FOOTER,
+    }
+
+
+def cuerpo_constancia(constancia, institucion=None):
     student = constancia.student
+    institucion = institucion or datos_institucionales()
+    cedula_directora = f', titular de la cedula de Identidad Nro <b>{institucion["directora_cedula"]}</b>,' if institucion['directora_cedula'] else ''
     base = (
-        f'Quien suscribe, <b><i>{DIRECTORA}</i></b>, titular de la cedula de Identidad '
-        f'Nro <b>{DIRECTORA_CEDULA}</b>, hace constar por medio de la presente que el (la) '
+        f'Quien suscribe, <b><i>{institucion["directora"]}</i></b>{cedula_directora} '
+        f'hace constar por medio de la presente que el (la) '
     )
 
     if constancia.report_type == Constancia.TIPO_SOLVENCIA:
@@ -180,6 +213,7 @@ def titulo_constancia(constancia):
 
 
 def generar_pdf_constancia(constancia):
+    institucion = datos_institucionales()
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -203,11 +237,11 @@ def generar_pdf_constancia(constancia):
         logo = Paragraph('', styles['Normal'])
 
     header_text = (
-        f'<b>{INSTITUCION}</b><br/>'
+        f'<b>{institucion["institucion"]}</b><br/>'
         'Ministerio del Poder Popular Para La Educacion.<br/>'
-        f'Codigo DEA: {CODIGO_DEA}<br/>'
+        f'Codigo DEA: {institucion["dea"] or "-"}<br/>'
         'Republica Bolivariana de Venezuela<br/>'
-        f'RIF: {RIF}'
+        f'RIF: {institucion["rif"] or "-"}'
     )
     header = Table([[logo, Paragraph(header_text, styles['HeaderText'])]], colWidths=[1.25 * inch, 4.7 * inch])
     header.setStyle(TableStyle([
@@ -221,7 +255,7 @@ def generar_pdf_constancia(constancia):
         header,
         Spacer(1, 0.65 * inch),
         Paragraph(titulo_constancia(constancia) + '.', styles['DocTitle']),
-        Paragraph(cuerpo_constancia(constancia), styles['BodyTextJustify']),
+        Paragraph(cuerpo_constancia(constancia, institucion), styles['BodyTextJustify']),
         Spacer(1, 0.45 * inch),
         Paragraph(f'En {LUGAR} a los {fecha_larga(timezone.localdate())}.', styles['BodyLeft']),
     ]
@@ -234,9 +268,9 @@ def generar_pdf_constancia(constancia):
 
     story.extend([
         Spacer(1, 0.9 * inch),
-        Paragraph('______________________________<br/><b>Prof. Glory Mar Acacio.</b><br/>Directora.', styles['CenterSmall']),
+        Paragraph(f'______________________________<br/><b>{institucion["directora"]}</b><br/>Directora.', styles['CenterSmall']),
         Spacer(1, 0.35 * inch),
-        Paragraph(DIRECCION_FOOTER, styles['CenterSmall']),
+        Paragraph(institucion['footer'], styles['CenterSmall']),
     ])
 
     doc.build(story)
@@ -285,11 +319,69 @@ def constancia_create(request):
 
 
 @login_required(login_url='iniciar_sesion')
-@user_passes_test(can_manage_constancias, login_url='iniciar_sesion')
 def constancia_detail(request, pk):
     constancia = get_object_or_404(Constancia.objects.select_related('student', 'student__parent', 'issued_by'), pk=pk)
+    if not can_view_constancia(request.user, constancia):
+        return HttpResponseForbidden('No tienes permiso para descargar esta constancia.')
     pdf = generar_pdf_constancia(constancia)
     filename = f'{constancia.report_type}_{constancia.student.student_id}.pdf'
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required(login_url='iniciar_sesion')
+def representative_reports(request):
+    parent = representative_parent(request.user)
+    if not parent:
+        return HttpResponseForbidden('No tienes un representante asociado a este usuario.')
+
+    students = Student.objects.filter(parent=parent, is_archived=False).order_by('first_name', 'last_name')
+    selected_student = None
+    student_id = request.GET.get('student')
+    if student_id:
+        selected_student = students.filter(pk=student_id).first()
+    if selected_student is None:
+        selected_student = students.first()
+
+    constancias = Constancia.objects.filter(student__parent=parent).select_related('student', 'issued_by')
+    if selected_student:
+        constancias = constancias.filter(student=selected_student)
+
+    return render(request, 'reportes/representante.html', {
+        'parent': parent,
+        'students': students,
+        'selected_student': selected_student,
+        'constancias': constancias,
+        'constancia_types': [
+            (Constancia.TIPO_ESTUDIO, 'Constancia de estudio', 'fa-file-signature'),
+            (Constancia.TIPO_INSCRIPCION, 'Constancia de inscripcion', 'fa-file-lines'),
+            (Constancia.TIPO_COMPORTAMIENTO, 'Certificado de comportamiento', 'fa-award'),
+        ],
+    })
+
+
+@login_required(login_url='iniciar_sesion')
+def representative_constancia_pdf(request, student_id, report_type):
+    parent = representative_parent(request.user)
+    if not parent:
+        return HttpResponseForbidden('No tienes un representante asociado a este usuario.')
+
+    valid_types = {choice[0] for choice in Constancia.TIPO_CHOICES}
+    if report_type not in valid_types:
+        return HttpResponseForbidden('Tipo de constancia invalido.')
+
+    student = get_object_or_404(Student.objects.select_related('parent'), pk=student_id, parent=parent, is_archived=False)
+    config = SchoolConfiguration.get_solo()
+    constancia = Constancia.objects.create(
+        report_type=report_type,
+        title=dict(Constancia.TIPO_CHOICES).get(report_type, 'Constancia'),
+        student=student,
+        issued_by=request.user,
+        academic_year=config.active_academic_year,
+    )
+    pdf = generar_pdf_constancia(constancia)
+    filename = f'{constancia.report_type}_{student.student_id}.pdf'
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response

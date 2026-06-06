@@ -2330,3 +2330,558 @@ body.sistema-body .sidebar::-webkit-scrollbar-thumb {
 body.sistema-body .sidebar::-webkit-scrollbar-track {
   background: rgba(255,255,255,0.04);
 }
+
+/* ===== GESTION DE USUARIOS ===== */
+.user-admin {
+  display: grid;
+  gap: 20px;
+}
+
+.user-admin-create,
+.user-admin-list {
+  background: var(--s-card);
+  border: 1px solid var(--s-borde);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--s-sombra);
+}
+
+.user-admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--s-borde);
+  margin-bottom: 18px;
+}
+
+.user-admin-head.compact {
+  margin-bottom: 14px;
+}
+
+.user-admin-kicker {
+  display: block;
+  color: var(--s-turquesa);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.user-admin-head h2 {
+  color: var(--s-texto);
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.user-admin-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(239,68,68,0.28);
+  border-radius: 8px;
+  color: #fca5a5;
+  background: rgba(239,68,68,0.08);
+}
+
+.user-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 18px;
+}
+
+.user-admin-section {
+  border: 1px solid rgba(125,199,246,0.12);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+}
+
+.user-admin-section-title {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border-bottom: 1px solid rgba(125,199,246,0.12);
+  background: rgba(125,199,246,0.04);
+}
+
+.user-admin-section-title i {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--s-azul);
+  background: rgba(125,199,246,0.12);
+  flex: 0 0 38px;
+}
+
+.user-admin-section-title h3 {
+  margin: 0;
+  color: var(--s-texto);
+  font-size: 1rem;
+}
+
+.user-admin-section-title p {
+  margin: 3px 0 0;
+  color: var(--s-suave);
+  font-size: 0.8rem;
+}
+
+.user-admin-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+
+.user-field label {
+  color: var(--s-texto);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.user-field .form-control {
+  min-height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--s-borde);
+  background: rgba(10,25,41,0.72);
+  color: var(--s-texto);
+}
+
+.user-field .form-control:focus {
+  border-color: var(--s-azul);
+  box-shadow: 0 0 0 3px rgba(125,199,246,0.16);
+  background: rgba(10,25,41,0.92);
+  color: var(--s-texto);
+}
+
+.user-active {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(139,244,237,0.18);
+  border-radius: 8px;
+  background: rgba(139,244,237,0.05);
+}
+
+.user-active strong,
+.role-card strong {
+  color: var(--s-texto);
+  display: block;
+  font-size: 0.86rem;
+}
+
+.user-active small,
+.role-card small {
+  color: var(--s-suave);
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.role-grid {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.role-card {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(125,199,246,0.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.role-card:hover {
+  border-color: rgba(125,199,246,0.34);
+  background: rgba(125,199,246,0.06);
+}
+
+.role-card.role-teacher {
+  border-color: rgba(247,207,13,0.22);
+  background: rgba(247,207,13,0.04);
+}
+
+.role-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--s-azul);
+  background: rgba(125,199,246,0.12);
+}
+
+.role-teacher .role-icon {
+  color: var(--s-dorado);
+  background: rgba(247,207,13,0.10);
+}
+
+.user-role-badges,
+.user-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.user-actions form {
+  margin: 0;
+}
+
+.user-actions .s-btn {
+  padding: 7px 10px;
+  border-radius: 8px;
+}
+
+@media (max-width: 980px) {
+  .user-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .user-admin-create,
+  .user-admin-list {
+    padding: 14px;
+  }
+
+  .user-admin-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .user-admin-head .s-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .user-admin-fields {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .role-grid {
+    padding: 14px;
+  }
+}
+
+/* ===== EDITAR ESTUDIANTE RESPONSIVO ===== */
+.student-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.student-edit-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--s-borde);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(125,199,246,0.10), rgba(139,244,237,0.04));
+  box-shadow: var(--s-sombra);
+}
+
+.student-edit-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.student-edit-profile img,
+.student-edit-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+  flex: 0 0 76px;
+  object-fit: cover;
+  border: 1px solid rgba(125,199,246,0.32);
+  background: rgba(10,25,41,0.65);
+}
+
+.student-edit-avatar {
+  display: grid;
+  place-items: center;
+  color: var(--s-azul);
+  font-size: 2rem;
+}
+
+.student-edit-eyebrow {
+  display: block;
+  color: var(--s-turquesa);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.student-edit-profile h2 {
+  margin: 0 0 8px;
+  color: var(--s-texto);
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.student-edit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--s-suave);
+  font-size: 0.82rem;
+}
+
+.student-edit-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(125,199,246,0.16);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+}
+
+.student-edit-actions,
+.student-edit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.student-edit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.student-edit-section {
+  border: 1px solid var(--s-borde);
+  border-radius: 8px;
+  background: var(--s-card);
+  box-shadow: var(--s-sombra);
+  overflow: hidden;
+}
+
+.student-edit-section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--s-borde);
+  background: rgba(125,199,246,0.04);
+}
+
+.student-edit-section-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  color: var(--s-azul);
+  background: rgba(125,199,246,0.12);
+  border: 1px solid rgba(125,199,246,0.24);
+}
+
+.student-edit-section-icon.alt {
+  color: var(--s-turquesa);
+  background: rgba(139,244,237,0.10);
+  border-color: rgba(139,244,237,0.22);
+}
+
+.student-edit-section-head h5 {
+  margin: 0;
+  color: var(--s-texto);
+  font-size: 1rem;
+}
+
+.student-edit-section-head p {
+  margin: 3px 0 0;
+  color: var(--s-suave);
+  font-size: 0.82rem;
+}
+
+.student-edit-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.student-edit-field.is-wide {
+  grid-column: 1 / -1;
+}
+
+.student-edit-field .form-label,
+.student-edit-field label {
+  color: var(--s-texto);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.student-edit-field .form-control,
+.student-edit-field .form-select {
+  min-height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--s-borde);
+  background: rgba(10,25,41,0.72);
+  color: var(--s-texto);
+  font-size: 0.9rem;
+}
+
+.student-edit-field .form-control:focus,
+.student-edit-field .form-select:focus {
+  border-color: var(--s-azul);
+  box-shadow: 0 0 0 3px rgba(125,199,246,0.16);
+  background: rgba(10,25,41,0.92);
+  color: var(--s-texto);
+}
+
+.student-edit-field input[type="file"].form-control {
+  padding: 8px 10px;
+}
+
+.student-edit-field.is-check {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid rgba(125,199,246,0.12);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+}
+
+.student-edit-field .form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.student-edit-field .form-check-input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+}
+
+.form-help {
+  color: var(--s-suave);
+  font-size: 0.75rem;
+  margin-top: 5px;
+}
+
+.field-error {
+  color: #fca5a5;
+  font-size: 0.76rem;
+  margin-top: 5px;
+}
+
+.student-edit-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 12px;
+  border: 1px solid var(--s-borde);
+  border-radius: 8px;
+  background: rgba(15,37,64,0.96);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.22);
+}
+
+.student-edit .s-btn {
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .student-edit-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .student-edit-actions,
+  .student-edit-footer {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .student-edit-actions .s-btn,
+  .student-edit-footer .s-btn,
+  .student-edit-footer button {
+    flex: 1 1 160px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sistema-contenido {
+    padding: 14px;
+  }
+
+  .student-edit-hero {
+    padding: 14px;
+  }
+
+  .student-edit-profile {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .student-edit-profile img,
+  .student-edit-avatar {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+    font-size: 1.55rem;
+  }
+
+  .student-edit-profile h2 {
+    font-size: 1.08rem;
+  }
+
+  .student-edit-meta {
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+
+  .student-edit-section-head {
+    padding: 14px;
+  }
+
+  .student-edit-fields {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .student-edit .s-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .student-edit-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

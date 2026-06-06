@@ -1,3 +1,4 @@
+import logging
 import queue
 import threading
 
@@ -6,6 +7,7 @@ from django.core.mail import send_mail
 
 
 _email_queue = queue.Queue()
+logger = logging.getLogger(__name__)
 
 
 def _worker():
@@ -20,8 +22,8 @@ def _worker():
                 fail_silently=False,
             )
         except Exception:
-            # The web request must stay fast; failures can be retried by requesting a new code/link.
-            pass
+            # Keep the web request fast, but leave a useful trail for admins.
+            logger.exception('No se pudo enviar el correo a %s.', recipient)
         finally:
             _email_queue.task_done()
 
@@ -43,10 +45,10 @@ def enqueue_otp_email(recipient, codigo):
 
 def enqueue_reset_email(recipient, reset_link):
     _email_queue.put((
-        'Restablecer contraseña - Estrella de Belen',
+        'Restablecer contrasena - Estrella de Belen',
         (
-            'Recibimos una solicitud para restablecer tu contraseña.\n\n'
-            f'Abre este enlace para crear una nueva contraseña:\n{reset_link}\n\n'
+            'Recibimos una solicitud para restablecer tu contrasena.\n\n'
+            f'Abre este enlace para crear una nueva contrasena:\n{reset_link}\n\n'
             'Este enlace es valido por 15 minutos. Si no solicitaste este cambio, ignora este mensaje.'
         ),
         recipient,

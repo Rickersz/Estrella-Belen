@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction, IntegrityError
 
+from escuela.audit import log_audit
 from escuela.models import ClassTeacherAssignment
 from .forms import AssignmentForm, SubjectForm
 from .models import Subject
@@ -45,14 +46,14 @@ def add_subject(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_materias, login_url='iniciar_sesion')
 def subject_list(request):
-    subjects = Subject.objects.all()
+    subjects = Subject.objects.filter(is_archived=False)
     return render(request, 'materia/lista-materias.html', {'subjects': subjects})
 
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_gestionar_materias, login_url='iniciar_sesion')
 def edit_subject(request, code):
-    subject = get_object_or_404(Subject, code=code)
+    subject = get_object_or_404(Subject, code=code, is_archived=False)
     form = SubjectForm(instance=subject)
 
     if request.method == 'POST':
@@ -80,18 +81,44 @@ def edit_subject(request, code):
 @user_passes_test(puede_gestionar_materias, login_url='iniciar_sesion')
 def delete_subject(request, code):
     if request.method == 'POST':
-        subject = get_object_or_404(Subject, code=code)
+        subject = get_object_or_404(Subject, code=code, is_archived=False)
         subject_name = f'{subject.code} - {subject.name}'
-        subject.delete()
-        messages.success(request, f'{subject_name} eliminada correctamente.')
+        subject.is_archived = True
+        subject.save(update_fields=['is_archived'])
+        ClassTeacherAssignment.objects.filter(subject=subject, is_active=True).update(is_active=False)
+        log_audit(request, 'archivar_materia', subject, f'Archivo materia {subject}.')
+        messages.success(request, f'{subject_name} archivada correctamente.')
         return redirect('subject_list')
     return HttpResponseForbidden('No se puede eliminar la materia')
 
 
 @login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestionar_materias, login_url='iniciar_sesion')
+def archived_subjects(request):
+    subjects = Subject.objects.filter(is_archived=True).order_by('code')
+    return render(request, 'materia/archivadas.html', {'subjects': subjects})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(puede_gestionar_materias, login_url='iniciar_sesion')
+def restore_subject(request, code):
+    if request.method == 'POST':
+        subject = get_object_or_404(Subject, code=code, is_archived=True)
+        subject.is_archived = False
+        subject.save(update_fields=['is_archived'])
+        log_audit(request, 'restaurar_materia', subject, f'Restauro materia {subject}.')
+        messages.success(request, 'Materia restaurada correctamente.')
+        return redirect('archived_subjects')
+    return HttpResponseForbidden('No se puede restaurar la materia')
+
+
+@login_required(login_url='iniciar_sesion')
 @user_passes_test(puede_ver_materias, login_url='iniciar_sesion')
 def assignment_list(request):
-    assignments = ClassTeacherAssignment.objects.select_related('class_assigned', 'subject', 'teacher').all()
+    assignments = ClassTeacherAssignment.objects.select_related('class_assigned', 'subject', 'teacher').filter(
+        subject__is_archived=False,
+        teacher__is_archived=False,
+    )
     return render(request, 'materia/lista-asignaciones.html', {'assignments': assignments})
 
 
@@ -140,8 +167,10 @@ def edit_assignment(request, assignment_id):
 def delete_assignment(request, assignment_id):
     if request.method == 'POST':
         assignment = get_object_or_404(ClassTeacherAssignment, id=assignment_id)
-        assignment.delete()
-        messages.success(request, 'Asignación eliminada correctamente.')
+        assignment.is_active = False
+        assignment.save(update_fields=['is_active'])
+        log_audit(request, 'desactivar_asignacion', assignment, f'Desactivo asignacion {assignment}.')
+        messages.success(request, 'Asignacion desactivada correctamente.')
         return redirect('assignment_list')
     return HttpResponseForbidden('No se puede eliminar la asignación')
 

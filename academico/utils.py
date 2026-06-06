@@ -41,7 +41,7 @@ def teacher_sections(user):
 
 
 def students_for_user(user):
-    qs = Student.objects.select_related('parent')
+    qs = Student.objects.select_related('parent').filter(is_archived=False)
     if is_admin(user):
         return qs
     if is_teacher(user):

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,20 +20,30 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# reCAPTCHA keys (use real keys in production; these defaults are Google's test keys)
-RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
-RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY','django-insecure-dev-only-123456789')
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-local-development-only-change-me'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY must be configured when DEBUG is disabled.')
+
+# reCAPTCHA keys (Google test keys are allowed only in DEBUG for local development)
 RECAPTCHA_VERIFY_ENABLED = os.getenv('RECAPTCHA_VERIFY_ENABLED', 'True').lower() in ('true', '1', 'yes')
 RECAPTCHA_VERIFY_TIMEOUT = float(os.getenv('RECAPTCHA_VERIFY_TIMEOUT', '1.5'))
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
+if DEBUG:
+    RECAPTCHA_SITE_KEY = RECAPTCHA_SITE_KEY or '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+    RECAPTCHA_SECRET_KEY = RECAPTCHA_SECRET_KEY or '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+elif not (RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY):
+    RECAPTCHA_VERIFY_ENABLED = False
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
 
@@ -127,11 +138,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CSRF_FAILURE_VIEW = 'autenticacion.views.csrf_failure'
 
-PASSWORD_HASHERS = [
-    'autenticacion.hashers.FastPBKDF2PasswordHasher',
-]
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -182,3 +188,26 @@ OTP_MAX_ATTEMPTS = int(os.getenv('OTP_MAX_ATTEMPTS', '5'))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv('OTP_RESEND_COOLDOWN_SECONDS', '60'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'    # default type for primary keys in models
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django.security': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'autenticacion': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'pagos': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'escuela': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}

@@ -23,6 +23,8 @@ urlpatterns = [
     path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
     path('toggle-lock-user/<int:user_id>/', views.toggle_lock_user, name='toggle_lock_user'),
     path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('users/deactivated/', views.deactivated_users, name='deactivated_users'),
+    path('users/<int:user_id>/restore/', views.restore_user, name='restore_user'),
     
     path('mark-notification-as-read/<str:notification_id>/', views.mark_notification_as_read, name='mark_notification_as_read'),
     path('clear-all-notifications/', views.clear_notifications, name='clear_all_notifications'),

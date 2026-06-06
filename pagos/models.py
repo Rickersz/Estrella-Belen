@@ -3,11 +3,12 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from escuela.models import active_academic_year_default
 
 
 class PaymentConfig(models.Model):
     name = models.CharField(max_length=120, default='Mensualidad')
-    academic_year = models.CharField(max_length=9, default='2025-2026')
+    academic_year = models.CharField(max_length=9, default=active_academic_year_default)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     due_day = models.PositiveSmallIntegerField(default=5)
     allowed_days = models.PositiveSmallIntegerField(default=5)
@@ -49,7 +50,7 @@ class Payment(models.Model):
     student = models.ForeignKey('estudiante.Student', on_delete=models.CASCADE, related_name='payments')
     representative = models.ForeignKey('estudiante.Parent', on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
     concept = models.CharField(max_length=150, default='Mensualidad')
-    academic_year = models.CharField(max_length=9, default='2025-2026')
+    academic_year = models.CharField(max_length=9, default=active_academic_year_default)
     due_date = models.DateField()
     payment_date = models.DateField(null=True, blank=True)
     amount_due = models.DecimalField(max_digits=12, decimal_places=2)

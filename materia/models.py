@@ -6,6 +6,7 @@ class Subject(models.Model):
     code = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
     class_level = models.ManyToManyField(to='escuela.Class', blank=True)
+    is_archived = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.code} - {self.name}"

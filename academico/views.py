@@ -57,7 +57,7 @@ def grade_list(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(can_manage_academic, login_url='iniciar_sesion')
 def grade_create(request):
-    form = AcademicGradeForm(request.POST or None)
+    form = AcademicGradeForm(request.POST or None, user=request.user)
     if request.method == 'POST' and form.is_valid():
         grade = form.save(commit=False)
         grade.created_by = request.user
@@ -76,7 +76,7 @@ def grade_edit(request, pk):
     if grade.is_locked and not is_admin(request.user):
         messages.error(request, 'Esta nota esta bloqueada y solo administracion puede modificarla.')
         return redirect('grade_list')
-    form = AcademicGradeForm(request.POST or None, instance=grade)
+    form = AcademicGradeForm(request.POST or None, instance=grade, user=request.user)
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, 'Nota actualizada correctamente.')
@@ -183,7 +183,7 @@ def observation_list(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(can_manage_academic, login_url='iniciar_sesion')
 def observation_create(request):
-    form = DisciplineObservationForm(request.POST or None)
+    form = DisciplineObservationForm(request.POST or None, user=request.user)
     if request.method == 'POST' and form.is_valid():
         observation = form.save(commit=False)
         observation.created_by = request.user

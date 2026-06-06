@@ -1,12 +1,12 @@
 ﻿{% extends 'base.html' %}
 
-{% block titulo %}Panel de Control - Estrella de BelÃ©n{% endblock %}
+{% block titulo %}Panel de Control - Estrella de Belen{% endblock %}
 {% block titulo_pagina %}Panel de Control{% endblock %}
 {% block subtitulo_pagina %}Bienvenido al sistema escolar{% endblock %}
 
 {% block contenido %}
 
-<!-- Tarjetas de estadÃ­sticas -->
+<!-- Tarjetas de estadisticas -->
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-sm-6">
         <div class="s-stat-card">
@@ -54,12 +54,12 @@
     </div>
 </div>
 
-<!-- Accesos rÃ¡pidos -->
+<!-- Accesos rapidos -->
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="s-card">
             <div class="s-card-header">
-                <h5 class="s-card-titulo"><i class="fas fa-bolt me-2" style="color:var(--s-dorado)"></i>Accesos RÃ¡pidos</h5>
+                <h5 class="s-card-titulo"><i class="fas fa-bolt me-2" style="color:var(--s-dorado)"></i>Accesos Rapidos</h5>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{% url 'add_student' %}" class="s-btn s-btn-primario">
@@ -75,7 +75,7 @@
                     <i class="fas fa-book"></i> Agregar Materia
                 </a>
                 <a href="{% url 'access_log' %}" class="s-btn s-btn-secundario">
-                    <i class="fas fa-file-alt"></i> Ver BitÃ¡cora
+                    <i class="fas fa-file-alt"></i> Ver Bitacora
                 </a>
                 <a href="{% url 'payment_dashboard' %}" class="s-btn s-btn-secundario">
                     <i class="fas fa-wallet"></i> Gestionar Pagos
@@ -189,7 +189,7 @@
                 </div>
                 <div style="flex:1;min-width:180px;display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(125,199,246,0.05);border-radius:10px;border:1px solid var(--s-borde)">
                     <span style="color:var(--s-suave);font-size:0.82rem">Ano Escolar</span>
-                    <span class="s-badge s-badge-dorado">2025-2026</span>
+                    <span class="s-badge s-badge-dorado">{{ active_academic_year }}</span>
                 </div>
                 {% if user.is_admin %}
                 <a href="{% url 'user_management' %}" class="s-btn s-btn-primario" style="justify-content:center;margin-top:4px">

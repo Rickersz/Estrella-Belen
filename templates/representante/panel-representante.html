@@ -11,6 +11,34 @@
     <div class="col-md-4"><div class="s-stat-card"><div class="s-stat-icono verde"><i class="fas fa-bell"></i></div><div><div class="s-stat-valor">{{ pending_payments.count }}</div><div class="s-stat-label">Alertas</div></div></div></div>
 </div>
 
+<div class="s-card mb-4">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo"><i class="fas fa-user-check me-2" style="color:var(--s-azul)"></i>Estudiante seleccionado</h5>
+        <a href="{% url 'representative_reports' %}" class="s-btn s-btn-secundario"><i class="fas fa-chart-pie"></i> Mis reportes</a>
+    </div>
+    <div class="p-4">
+        {% if students %}
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label for="student" class="form-label fw-semibold">Ver informacion de</label>
+                <select name="student" id="student" class="form-select">
+                    {% for student in students %}
+                    <option value="{{ student.pk }}" {% if selected_student and selected_student.pk == student.pk %}selected{% endif %}>
+                        {{ student.first_name }} {{ student.last_name }} - {{ student.grado|default:"Sin grado" }} {{ student.section|default:"" }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button class="s-btn s-btn-primario w-100" type="submit"><i class="fas fa-filter"></i> Actualizar</button>
+            </div>
+        </form>
+        {% else %}
+        <div style="color:var(--s-suave)">No hay estudiantes asociados</div>
+        {% endif %}
+    </div>
+</div>
+
 <div class="row g-3">
     <div class="col-lg-5">
         <div class="s-card">
@@ -22,6 +50,7 @@
                     <div class="mt-2 d-flex flex-wrap gap-2">
                         <a href="{% url 'academic_history_student' student.pk %}" class="s-btn s-btn-secundario" style="padding:5px 10px;font-size:0.75rem">Historial</a>
                         <a href="{% url 'report_card_pdf' student.pk %}" class="s-btn s-btn-exito" style="padding:5px 10px;font-size:0.75rem">Boletin PDF</a>
+                        <a href="{% url 'representative_reports' %}?student={{ student.pk }}" class="s-btn s-btn-primario" style="padding:5px 10px;font-size:0.75rem">Reportes</a>
                     </div>
                 </div>
             {% empty %}

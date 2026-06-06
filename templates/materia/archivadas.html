@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Materias archivadas{% endblock %}
+{% block titulo_pagina %}Materias archivadas{% endblock %}
+{% block subtitulo_pagina %}Materias ocultas de la operacion diaria{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5 class="s-card-titulo">Archivadas</h5></div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead><tr><th>Codigo</th><th>Nombre</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for subject in subjects %}
+                <tr>
+                    <td>{{ subject.code }}</td>
+                    <td>{{ subject.name }}</td>
+                    <td>
+                        <form method="post" action="{% url 'restore_subject' subject.code %}">
+                            {% csrf_token %}
+                            <button class="s-btn s-btn-secundario" type="submit"><i class="fas fa-rotate-left"></i> Restaurar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" style="text-align:center;padding:30px">No hay materias archivadas</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

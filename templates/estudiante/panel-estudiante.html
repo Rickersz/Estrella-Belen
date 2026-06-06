@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Panel Estudiante{% endblock %}
+{% block titulo_pagina %}Panel Estudiante{% endblock %}
+{% block subtitulo_pagina %}Resumen academico y accesos principales{% endblock %}
+
+{% block contenido %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="s-stat-card">
+            <div class="s-stat-icono"><i class="fas fa-graduation-cap"></i></div>
+            <div>
+                <div class="s-stat-valor">Notas</div>
+                <div class="s-stat-label">Consulta tu rendimiento</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="s-stat-card">
+            <div class="s-stat-icono verde"><i class="fas fa-calendar-days"></i></div>
+            <div>
+                <div class="s-stat-valor">Horario</div>
+                <div class="s-stat-label">Revisa tus clases</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="s-stat-card">
+            <div class="s-stat-icono dorado"><i class="fas fa-bell"></i></div>
+            <div>
+                <div class="s-stat-valor">{{ notifications.count|default:0 }}</div>
+                <div class="s-stat-label">Notificaciones</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Cuenta</h5></div>
+            <div class="p-3">
+                <p class="mb-1"><strong>Usuario:</strong> {{ request.user.get_full_name|default:request.user.email }}</p>
+                <p class="mb-0"><strong>Correo:</strong> {{ request.user.email }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="s-card">
+            <div class="s-card-header"><h5 class="s-card-titulo">Notificaciones recientes</h5></div>
+            <div class="s-tabla-wrap">
+                <table class="s-tabla">
+                    <tbody>
+                    {% for notification in notifications|slice:":5" %}
+                        <tr><td>{{ notification.message }}</td></tr>
+                    {% empty %}
+                        <tr><td style="text-align:center;padding:30px">Sin notificaciones</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

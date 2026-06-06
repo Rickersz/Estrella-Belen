@@ -2,54 +2,102 @@
 
 {% block titulo %}Editar Estudiante{% endblock %}
 {% block titulo_pagina %}Editar Estudiante{% endblock %}
+{% block subtitulo_pagina %}Actualiza datos académicos, personales y del representante{% endblock %}
 
 {% block contenido %}
-<div class="s-card">
-    <div class="s-card-header">
-        <h5>Editar {{ student.first_name }} {{ student.last_name }}</h5>
-    </div>
-    <div class="s-card-body">
-        <form method="post" enctype="multipart/form-data" novalidate>
-            {% csrf_token %}
+<form method="post" enctype="multipart/form-data" novalidate class="student-edit">
+    {% csrf_token %}
 
-            {% if student_form.non_field_errors or parent_form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {{ student_form.non_field_errors }}
-                    {{ parent_form.non_field_errors }}
-                </div>
+    <div class="student-edit-hero">
+        <div class="student-edit-profile">
+            {% if student.student_image %}
+            <img src="{{ student.student_image.url }}" alt="{{ student.first_name }} {{ student.last_name }}">
+            {% else %}
+            <div class="student-edit-avatar"><i class="fas fa-user-graduate"></i></div>
             {% endif %}
-
-            <h6 class="mb-3">Datos del estudiante</h6>
-            <div class="row">
-                {% for field in student_form %}
-                <div class="col-md-6 mb-3">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="text-danger small">{{ field.errors }}</div>
-                    {% endif %}
+            <div>
+                <span class="student-edit-eyebrow">Ficha del estudiante</span>
+                <h2>{{ student.first_name }} {{ student.last_name }}</h2>
+                <div class="student-edit-meta">
+                    <span><i class="fas fa-id-card"></i> {{ student.student_id }}</span>
+                    <span><i class="fas fa-school"></i> {{ student.etapa|default:"-" }} / {{ student.grado|default:"-" }} {{ student.section|default:"" }}</span>
+                    <span><i class="fas fa-birthday-cake"></i> {{ student.edad_actual }} años</span>
                 </div>
-                {% endfor %}
             </div>
-
-            <h6 class="mb-3 mt-3">Datos del representante</h6>
-            <div class="row">
-                {% for field in parent_form %}
-                <div class="col-md-6 mb-3">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="text-danger small">{{ field.errors }}</div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-
-            <div class="d-flex gap-2 mt-3">
-                <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                <a href="{% url 'student_list' %}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
+        </div>
+        <div class="student-edit-actions">
+            <a href="{% url 'student_detail' student.slug %}" class="s-btn s-btn-secundario"><i class="fas fa-eye"></i> Ver ficha</a>
+            <a href="{% url 'student_list' %}" class="s-btn s-btn-secundario"><i class="fas fa-arrow-left"></i> Volver</a>
+            <button type="submit" class="s-btn s-btn-primario"><i class="fas fa-save"></i> Guardar cambios</button>
+        </div>
     </div>
-</div>
+
+    {% if student_form.non_field_errors or parent_form.non_field_errors %}
+    <div class="sistema-alerta sistema-alerta-error mb-3">
+        {{ student_form.non_field_errors }}
+        {{ parent_form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <div class="student-edit-grid">
+        <section class="student-edit-section">
+            <div class="student-edit-section-head">
+                <div class="student-edit-section-icon"><i class="fas fa-user"></i></div>
+                <div>
+                    <h5>Datos del estudiante</h5>
+                    <p>Identidad, información académica, salud básica y escolaridad.</p>
+                </div>
+            </div>
+            <div class="student-edit-fields">
+                {% for field in student_form %}
+                <div class="student-edit-field {% if field.field.widget.input_type == 'checkbox' %}is-check{% endif %} {% if field.name == 'direccion_completa' or field.name == 'observaciones' %}is-wide{% endif %}">
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="form-check">
+                        {{ field }}
+                        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                    {% else %}
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% endif %}
+                    {% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="student-edit-section">
+            <div class="student-edit-section-head">
+                <div class="student-edit-section-icon alt"><i class="fas fa-user-friends"></i></div>
+                <div>
+                    <h5>Datos del representante</h5>
+                    <p>Información de contacto familiar y datos laborales.</p>
+                </div>
+            </div>
+            <div class="student-edit-fields">
+                {% for field in parent_form %}
+                <div class="student-edit-field {% if field.field.widget.input_type == 'checkbox' %}is-check{% endif %}">
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="form-check">
+                        {{ field }}
+                        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                    {% else %}
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% endif %}
+                    {% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="student-edit-footer">
+        <a href="{% url 'student_list' %}" class="s-btn s-btn-secundario"><i class="fas fa-times"></i> Cancelar</a>
+        <button type="submit" class="s-btn s-btn-primario"><i class="fas fa-save"></i> Guardar cambios</button>
+    </div>
+</form>
 {% endblock %}

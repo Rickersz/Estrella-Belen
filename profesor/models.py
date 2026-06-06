@@ -6,7 +6,7 @@ from django.db import models
 class Teacher(models.Model):
     teacher_id = models.CharField(max_length=20)
     name = models.CharField(max_length=50)    
-    gender = models.CharField(max_length=10, choices= [('Male', 'Male'), ('Female', 'Female'), ('Others', 'Others')])
+    gender = models.CharField(max_length=10, choices=[('Male', 'Masculino'), ('Female', 'Femenino'), ('Others', 'Otro')])
     date_of_birth = models.DateField()
     joining_date = models.DateField()
     mobile_number = models.CharField(max_length=10)
@@ -26,6 +26,7 @@ class Teacher(models.Model):
 
     department = models.CharField(max_length=100, null=True, blank=True)
     subjects = models.ManyToManyField(to='materia.Subject', blank=True)
+    is_archived = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.teacher_id} - {self.name}"

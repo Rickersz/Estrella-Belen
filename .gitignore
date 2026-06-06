@@ -7,6 +7,8 @@ __pycache__/
 *.sqlite3
 
 media/
+backups/
+*.zip
 
 # ignore static images for development
 static/assets/img/

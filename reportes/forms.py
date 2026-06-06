@@ -1,5 +1,7 @@
 from django import forms
 from .models import Constancia
+from escuela.models import SchoolConfiguration
+from escuela.validators import validate_academic_year
 from estudiante.models import Student
 
 
@@ -11,10 +13,15 @@ class StudentChoiceField(forms.ModelChoiceField):
 
 class ConstanciaForm(forms.ModelForm):
     student = StudentChoiceField(
-        queryset=Student.objects.order_by('first_name', 'last_name'),
+        queryset=Student.objects.filter(is_archived=False).order_by('first_name', 'last_name'),
         label='Estudiante',
         widget=forms.Select(attrs={'class': 'form-control', 'data-searchable-students': 'true'})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.is_bound and not self.instance.pk:
+            self.fields['academic_year'].initial = SchoolConfiguration.get_solo().active_academic_year
 
     class Meta:
         model = Constancia
@@ -46,3 +53,6 @@ class ConstanciaForm(forms.ModelForm):
             self.add_error('behavior_rating', 'Selecciona el comportamiento.')
 
         return cleaned_data
+
+    def clean_academic_year(self):
+        return validate_academic_year(self.cleaned_data['academic_year'])

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Usuarios desactivados{% endblock %}
+{% block titulo_pagina %}Usuarios desactivados{% endblock %}
+{% block subtitulo_pagina %}Cuentas retiradas del acceso normal{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5 class="s-card-titulo">Usuarios desactivados</h5></div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead><tr><th>Correo</th><th>Nombre</th><th>Bloqueado</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.get_full_name|default:u.email }}</td>
+                    <td>{{ u.is_locked|yesno:"Si,No" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'restore_user' u.id %}">
+                            {% csrf_token %}
+                            <button class="s-btn s-btn-secundario" type="submit"><i class="fas fa-rotate-left"></i> Restaurar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center;padding:30px">No hay usuarios desactivados</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

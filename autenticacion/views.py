@@ -178,14 +178,14 @@ def forgot_password_view(request):
 def reset_password_view(request, token):
     reset_request = PasswordResetRequest.objects.filter(token=token).first()
     if not (reset_request and reset_request.is_valid):    # doesn't check for 2nd condition if reset_request is None
-        messages.error(request, 'El enlace de recuperaciÃ³n no es vÃ¡lido o expirÃ³. Solicita uno nuevo.')
+        messages.error(request, 'El enlace de recuperacion no es valido o expiro. Solicita uno nuevo.')
         return redirect('recuperar_contrasena')
     
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
         if new_password != confirm_password:
-            return render(request, 'autenticacion/reset-password.html', {'error': 'Las contraseÃ±as no coinciden.', 'token': token})
+            return render(request, 'autenticacion/reset-password.html', {'error': 'Las contrasenas no coinciden.', 'token': token})
 
         try:
             validate_password(new_password, reset_request.user)
@@ -196,7 +196,7 @@ def reset_password_view(request, token):
         reset_request.user.save()
         reset_request.delete()  # Invalidate the used token
 
-        messages.success(request, 'Tu contraseÃ±a fue restablecida correctamente. Ya puedes iniciar sesiÃ³n.')
+        messages.success(request, 'Tu contrasena fue restablecida correctamente. Ya puedes iniciar sesion.')
         return redirect('iniciar_sesion')
     return render(request, 'autenticacion/reset-password.html', {'token': token})
 

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Profesores archivados{% endblock %}
+{% block titulo_pagina %}Profesores archivados{% endblock %}
+{% block subtitulo_pagina %}Docentes ocultos de la operacion diaria{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5 class="s-card-titulo">Archivados</h5></div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td>{{ teacher.teacher_id }}</td>
+                    <td>{{ teacher.name }}</td>
+                    <td>{{ teacher.email }}</td>
+                    <td>
+                        <form method="post" action="{% url 'restore_teacher' teacher.teacher_id %}">
+                            {% csrf_token %}
+                            <button class="s-btn s-btn-secundario" type="submit"><i class="fas fa-rotate-left"></i> Restaurar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center;padding:30px">No hay profesores archivados</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

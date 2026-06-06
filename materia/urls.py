@@ -4,8 +4,10 @@ from . import views
 urlpatterns = [
     path('', views.subject_list, name='subject_list'),
     path('add/', views.add_subject, name='add_subject'),
+    path('archivadas/', views.archived_subjects, name='archived_subjects'),
     path('edit/<str:code>/', views.edit_subject, name='edit_subject'),
     path('delete/<str:code>/', views.delete_subject, name='delete_subject'),
+    path('restore/<str:code>/', views.restore_subject, name='restore_subject'),
 
     path('assignment/', views.assignment_list, name='assignment_list'),
     path('assignment/add/', views.add_assignment, name='add_assignment'),

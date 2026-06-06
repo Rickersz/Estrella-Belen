@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Estudiantes archivados{% endblock %}
+{% block titulo_pagina %}Estudiantes archivados{% endblock %}
+{% block subtitulo_pagina %}Registros ocultos de listados operativos{% endblock %}
+
+{% block contenido %}
+<div class="s-card">
+    <div class="s-card-header"><h5 class="s-card-titulo">Archivados</h5></div>
+    <div class="s-tabla-wrap">
+        <table class="s-tabla">
+            <thead><tr><th>Cedula escolar</th><th>Nombre</th><th>Grado</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.student_id }}</td>
+                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                    <td>{{ student.grado|default:"-" }} {{ student.section }}</td>
+                    <td>
+                        <form method="post" action="{% url 'restore_student' student.slug %}">
+                            {% csrf_token %}
+                            <button class="s-btn s-btn-secundario" type="submit"><i class="fas fa-rotate-left"></i> Restaurar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align:center;padding:30px">No hay estudiantes archivados</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

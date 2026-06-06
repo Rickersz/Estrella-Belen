@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mis reportes - Estrella de Belen{% endblock %}
+{% block titulo_pagina %}Mis reportes{% endblock %}
+{% block subtitulo_pagina %}Consulta academica, financiera y constancias de tus estudiantes{% endblock %}
+
+{% block contenido %}
+<div class="s-card mb-4">
+    <div class="s-card-header">
+        <h5 class="s-card-titulo"><i class="fas fa-users me-2" style="color:var(--s-azul)"></i>Seleccionar estudiante</h5>
+    </div>
+    <div class="p-4">
+        {% if students %}
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label fw-semibold" for="student">Estudiante a cargo</label>
+                <select name="student" id="student" class="form-select">
+                    {% for student in students %}
+                    <option value="{{ student.pk }}" {% if selected_student and selected_student.pk == student.pk %}selected{% endif %}>
+                        {{ student.first_name }} {{ student.last_name }} - {{ student.grado|default:"Sin grado" }} {{ student.section|default:"" }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="s-btn s-btn-primario w-100">
+                    <i class="fas fa-filter"></i> Ver reportes
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="text-center py-4" style="color:var(--s-suave)">No hay estudiantes asociados a este representante.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if selected_student %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="s-stat-card">
+            <div class="s-stat-icono"><i class="fas fa-user-graduate"></i></div>
+            <div>
+                <div class="s-stat-valor">{{ selected_student.first_name }}</div>
+                <div class="s-stat-label">{{ selected_student.last_name }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="s-stat-card">
+            <div class="s-stat-icono verde"><i class="fas fa-school"></i></div>
+            <div>
+                <div class="s-stat-valor">{{ selected_student.grado|default:"-" }}</div>
+                <div class="s-stat-label">Grado / {{ selected_student.section|default:"Sin seccion" }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="s-stat-card">
+            <div class="s-stat-icono dorado"><i class="fas fa-id-card"></i></div>
+            <div>
+                <div class="s-stat-valor">{{ selected_student.student_id }}</div>
+                <div class="s-stat-label">Codigo escolar</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="s-card h-100">
+            <div class="s-card-header">
+                <h5 class="s-card-titulo"><i class="fas fa-file-pdf me-2" style="color:var(--s-azul)"></i>Reportes disponibles</h5>
+            </div>
+            <div class="p-4">
+                <div class="row g-2">
+                    <div class="col-sm-6">
+                        <a href="{% url 'academic_history_student' selected_student.pk %}" class="s-btn s-btn-secundario w-100 justify-content-center">
+                            <i class="fas fa-history"></i> Historial academico
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'report_card_pdf' selected_student.pk %}" class="s-btn s-btn-exito w-100 justify-content-center">
+                            <i class="fas fa-file-pdf"></i> Boletin PDF
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'payment_list' %}?q={{ selected_student.student_id }}" class="s-btn s-btn-secundario w-100 justify-content-center">
+                            <i class="fas fa-wallet"></i> Pagos del estudiante
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'student_detail' selected_student.slug %}" class="s-btn s-btn-secundario w-100 justify-content-center">
+                            <i class="fas fa-eye"></i> Ver ficha
+                        </a>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-semibold mb-3">Generar constancias</h6>
+                <div class="row g-2">
+                    {% for type, label, icon in constancia_types %}
+                    <div class="col-sm-6 col-xl-4">
+                        <a href="{% url 'representative_constancia_pdf' selected_student.pk type %}" class="s-btn s-btn-primario w-100 justify-content-center">
+                            <i class="fas {{ icon }}"></i> {{ label }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="s-card h-100">
+            <div class="s-card-header">
+                <h5 class="s-card-titulo"><i class="fas fa-clock-rotate-left me-2" style="color:var(--s-azul)"></i>Constancias recientes</h5>
+            </div>
+            <div class="s-tabla-wrap">
+                <table class="s-tabla">
+                    <thead>
+                        <tr><th>Tipo</th><th>Fecha</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for const in constancias %}
+                        <tr>
+                            <td>{{ const.get_report_type_display }}</td>
+                            <td>{{ const.date_issued|date:"d/m/Y" }}</td>
+                            <td><a href="{% url 'constancia_detail' const.pk %}" class="s-btn s-btn-secundario" style="padding:4px 9px;font-size:.75rem"><i class="fas fa-download"></i></a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--s-suave)">Sin constancias emitidas</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

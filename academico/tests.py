@@ -4,8 +4,10 @@ from django.test import TestCase
 from django.urls import reverse
 
 from autenticacion.models import CustomUser
+from escuela.models import Class, ClassTeacherAssignment
 from estudiante.models import Parent, Student
 from materia.models import Subject
+from profesor.models import Teacher
 from .models import AcademicGrade
 
 
@@ -48,3 +50,45 @@ class AcademicAccessTests(TestCase):
         response = self.client.get(reverse('export_grades_excel'))
         self.assertEqual(response.status_code, 200)
         self.assertIn('spreadsheetml', response['Content-Type'])
+
+    def test_profesor_no_carga_nota_fuera_de_sus_secciones(self):
+        teacher_user = CustomUser.objects.create_user(email='teacher-acad@test.com', password='ClaveSegura123', is_teacher=True)
+        teacher = Teacher.objects.create(
+            teacher_id='T-AC-1',
+            name='Profesor A',
+            gender='Male',
+            date_of_birth='1990-01-01',
+            joining_date='2025-01-01',
+            mobile_number='0414000002',
+            qualification='Docente',
+            experience='5',
+            email=teacher_user.email,
+            address='Direccion',
+            city='Ciudad',
+            state='Estado',
+            country='VE',
+            zip_code='0000',
+        )
+        class_a = Class.objects.create(class_id='1RO', section='A', academic_year='2025-01-01')
+        ClassTeacherAssignment.objects.create(class_assigned=class_a, teacher=teacher, subject=self.subject)
+        other_student = Student.objects.create(
+            student_id='AC-002', first_name='Luis', last_name='Gomez', student_class='1',
+            section='B', admission_number='A2', joining_date='2025-01-01',
+            gender='Male', date_of_birth='2018-01-01',
+        )
+
+        self.client.force_login(teacher_user)
+        response = self.client.post(reverse('grade_create'), {
+            'student': other_student.pk,
+            'subject': self.subject.pk,
+            'teacher': teacher.pk,
+            'academic_year': '2025-2026',
+            'period': '2',
+            'grade': '19',
+            'weight': '100',
+            'qualitative': '',
+            'notes': '',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(AcademicGrade.objects.filter(student=other_student, period='2').exists())

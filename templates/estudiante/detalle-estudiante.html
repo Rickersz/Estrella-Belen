@@ -13,9 +13,11 @@
     <a href="{% url 'constancia_inscripcion' student.slug %}" class="s-btn s-btn-secundario">
       <i class="fas fa-file-alt"></i> Constancia
     </a>
+    {% if user.is_admin or user.is_teacher %}
     <a href="{% url 'edit_student' student.slug %}" class="s-btn s-btn-primario">
       <i class="fas fa-pen"></i> Editar
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -82,11 +84,11 @@
         <div class="row g-3">
           <div class="col-md-6"><strong>Padre:</strong> {{ student.parent.father_name|default:"-" }}</div>
           <div class="col-md-6"><strong>Teléfono padre:</strong> {{ student.parent.father_mobile|default:"-" }}</div>
-          <div class="col-md-6"><strong>Email padre:</strong> {{ student.parent.father_email|default:"-" }}</div>
+          <div class="col-md-6"><strong>Correo padre:</strong> {{ student.parent.father_email|default:"-" }}</div>
           <div class="col-md-6"><strong>Cédula padre:</strong> {{ student.parent.cedula_padre|default:"-" }}</div>
           <div class="col-md-6"><strong>Madre:</strong> {{ student.parent.mother_name|default:"-" }}</div>
           <div class="col-md-6"><strong>Teléfono madre:</strong> {{ student.parent.mother_mobile|default:"-" }}</div>
-          <div class="col-md-6"><strong>Email madre:</strong> {{ student.parent.mother_email|default:"-" }}</div>
+          <div class="col-md-6"><strong>Correo madre:</strong> {{ student.parent.mother_email|default:"-" }}</div>
         </div>
         {% else %}
         <span style="color:var(--s-suave)">Sin representante registrado.</span>

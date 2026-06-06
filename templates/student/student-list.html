@@ -4,16 +4,16 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col">
-            <h3 class="page-title">Students</h3>
+            <h3 class="page-title">Estudiantes</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                <li class="breadcrumb-item active">Students</li>
+                <li class="breadcrumb-item"><a href="{% url 'index' %}">Inicio</a></li>
+                <li class="breadcrumb-item active">Estudiantes</li>
             </ul>
         </div>
 
         <div class="col-auto text-end">
             <a href="{% url 'download_students_csv' %}" class="btn btn-outline-primary me-2">
-                <i class="fas fa-download"></i> Download
+                <i class="fas fa-download"></i> Descargar
             </a>
             <a href="{% url 'add_student' %}" class="btn btn-primary">
                 <i class="fas fa-plus"></i>
@@ -57,13 +57,13 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Student</th>
-                        <th>Academic</th>
-                        <th>DOB</th>
-                        <th>Parents</th>
-                        <th>Contacts</th>
-                        <th>Address</th>
-                        <th class="text-end">Action</th>
+                        <th>Estudiante</th>
+                        <th>Académico</th>
+                        <th>Nacimiento</th>
+                        <th>Representantes</th>
+                        <th>Contactos</th>
+                        <th>Dirección</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
 
@@ -163,22 +163,22 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
+                <h5 class="modal-title">Confirmar eliminación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                Are you sure you want to delete this student?
+                ¿Estás seguro de eliminar este estudiante?
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Cancel
+                    Cancelar
                 </button>
 
                 <form id="deleteForm" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
                 </form>
             </div>
 

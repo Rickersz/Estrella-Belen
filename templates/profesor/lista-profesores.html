@@ -48,12 +48,12 @@
                                         <a href="{% url 'teacher_detail' teacher.teacher_id %}"
                                             class="avatar avatar-sm me-2"><img class="avatar-img rounded-circle"
                                                 src="{%if teacher.teacher_image %} {{teacher.teacher_image.url}} {% endif %}"
-                                                alt="Teacher Image"></a>
+                                                alt="Imagen del profesor"></a>
                                         <a href="{% url 'teacher_detail' teacher.teacher_id %}">{{ teacher.name}}</a>
                                     </h2>
                                 </td>
                                     <td>Imparte clases</td>
-                                <td>{{ teacher.gender }}</td>
+                                <td>{{ teacher.get_gender_display }}</td>
                                     <td>Matemáticas</td>
                                 <td>A</td>
                                 <td>{{ teacher.mobile_number }}</td>

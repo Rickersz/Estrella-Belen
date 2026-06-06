@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from escuela.models import active_academic_year_default
 
 
 class AcademicGrade(models.Model):
@@ -13,7 +14,7 @@ class AcademicGrade(models.Model):
     student = models.ForeignKey('estudiante.Student', on_delete=models.CASCADE, related_name='grades')
     subject = models.ForeignKey('materia.Subject', on_delete=models.CASCADE, related_name='grades')
     teacher = models.ForeignKey('profesor.Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='grades')
-    academic_year = models.CharField(max_length=9, default='2025-2026')
+    academic_year = models.CharField(max_length=9, default=active_academic_year_default)
     period = models.CharField(max_length=20, choices=PERIOD_CHOICES)
     grade = models.DecimalField(max_digits=5, decimal_places=2)
     weight = models.DecimalField(max_digits=5, decimal_places=2, default=100)

@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.urls import reverse
 from autenticacion.models import AccessRequest, CustomUser
@@ -13,6 +14,7 @@ from autenticacion.email_queue import enqueue_generic_email
 from .forms import InvitationPasswordForm, RepresentativeAccessForm, SchoolConfigurationForm, UserCreationForm, UserEditForm
 from escuela import context_processors
 from .models import AuditLog, Notification, RepresentativeInvitation, SchoolConfiguration
+from .audit import log_audit
 from estudiante.models import Parent, Student
 from profesor.models import Teacher
 from materia.models import Subject
@@ -23,14 +25,15 @@ from escuela.models import ClassTeacherAssignment
 
 def get_admin_dashboard_context(extra_context=None):
     context = {
-        'students_count': Student.objects.count(),
+        'active_academic_year': SchoolConfiguration.get_solo().active_academic_year,
+        'students_count': Student.objects.filter(is_archived=False).count(),
         'teachers_count': Teacher.objects.count(),
         'subjects_count': Subject.objects.count(),
         'access_logs_count': AccessLog.objects.count(),
         'pending_payments_count': Payment.objects.filter(status__in=[Payment.STATUS_PENDING, Payment.STATUS_PARTIAL, Payment.STATUS_OVERDUE]).count(),
         'overdue_payments_count': Payment.objects.filter(status=Payment.STATUS_OVERDUE).count(),
         'payments_debt': Payment.objects.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or 0,
-        'recent_students': Student.objects.select_related('parent').order_by('-id')[:8],
+        'recent_students': Student.objects.select_related('parent').filter(is_archived=False).order_by('-id')[:8],
         'recent_access_logs': AccessLog.objects.select_related('user').order_by('-created_at')[:8],
         'recent_payments': Payment.objects.select_related('student', 'representative').order_by('-updated_at')[:8],
     }
@@ -44,17 +47,6 @@ def client_ip(request):
     if forwarded:
         return forwarded.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR')
-
-
-def log_audit(request, action, obj=None, description=''):
-    AuditLog.objects.create(
-        user=request.user if request.user.is_authenticated else None,
-        action=action,
-        model_name=obj.__class__.__name__ if obj else '',
-        object_id=str(getattr(obj, 'pk', '')) if obj else '',
-        description=description,
-        ip_address=client_ip(request),
-    )
 
 
 @login_required(login_url='iniciar_sesion')
@@ -111,17 +103,26 @@ def teacher_dashboard(request):
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_student, login_url='iniciar_sesion')
 def student_dashboard(request):
-    return render(request, 'estudiante/panel-estudiante.html')
+    notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')
+    return render(request, 'estudiante/panel-estudiante.html', {'notifications': notifications})
 
 @login_required(login_url='iniciar_sesion')
 @user_passes_test(is_representative, login_url='iniciar_sesion')
 def representative_dashboard(request):
     parent = getattr(request.user, 'representante', None)
-    students = parent.student_set.all() if parent else Student.objects.none()
+    students = parent.student_set.filter(is_archived=False).order_by('first_name', 'last_name') if parent else Student.objects.none()
+    selected_student = None
+    if parent:
+        selected_id = request.GET.get('student')
+        selected_student = students.filter(pk=selected_id).first() if selected_id else students.first()
+
     payments = Payment.objects.filter(representative=parent).select_related('student') if parent else Payment.objects.none()
+    if selected_student:
+        payments = payments.filter(student=selected_student)
     return render(request, 'representante/panel-representante.html', {
         'parent': parent,
         'students': students,
+        'selected_student': selected_student,
         'payments': payments[:8],
         'pending_payments': payments.filter(balance__gt=0),
         'debt': payments.filter(balance__gt=0).aggregate(total=Sum('balance'))['total'] or 0,
@@ -132,6 +133,56 @@ def representative_dashboard(request):
 def create_notification(user, message):
     if user.is_authenticated:
         Notification.objects.create(user=user, message=message)        # create notification object in the database
+
+
+def ensure_teacher_profile(user, previous_email=None):
+    if not getattr(user, 'is_teacher', False):
+        return None, False
+
+    full_name = user.get_full_name() or user.email.split('@')[0]
+    lookup_email = previous_email or user.email
+    teacher = Teacher.objects.filter(email__iexact=lookup_email).first()
+    created = False
+
+    if teacher and teacher.email.lower() != user.email.lower():
+        email_in_use = Teacher.objects.filter(email__iexact=user.email).exclude(pk=teacher.pk).exists()
+        if not email_in_use:
+            teacher.email = user.email
+
+    if not teacher:
+        teacher, created = Teacher.objects.get_or_create(
+            email=user.email,
+            defaults={
+                'teacher_id': f'DOC-{user.pk:04d}',
+                'name': full_name,
+                'gender': 'Others',
+                'date_of_birth': timezone.localdate().replace(year=timezone.localdate().year - 25),
+                'joining_date': timezone.localdate(),
+                'mobile_number': '0000000',
+                'qualification': 'Por completar',
+                'experience': 'Por completar',
+                'address': 'Por completar',
+                'city': 'Por completar',
+                'state': 'Por completar',
+                'country': 'Venezuela',
+                'zip_code': '0000',
+                'department': 'Por asignar',
+            },
+        )
+
+    changed_fields = []
+    if not teacher.name or teacher.name == 'Por completar':
+        teacher.name = full_name
+        changed_fields.append('name')
+    if teacher.is_archived:
+        teacher.is_archived = False
+        changed_fields.append('is_archived')
+    if teacher.email != user.email and not Teacher.objects.filter(email__iexact=user.email).exclude(pk=teacher.pk).exists():
+        teacher.email = user.email
+        changed_fields.append('email')
+    if changed_fields:
+        teacher.save(update_fields=changed_fields)
+    return teacher, created
     
 @login_required(login_url='iniciar_sesion')
 def dashboard(request):
@@ -145,9 +196,7 @@ def dashboard(request):
 #region notifications
 @login_required(login_url='iniciar_sesion')
 def mark_notification_as_read(request, notification_id):
-    notification = Notification.objects.get(id=notification_id, user=request.user)
-    print('\n\nNotification ID:', notification_id)
-    print('Notification Object:', notification)
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
     if request.method == 'POST' and notification:
         notification.is_read = True
         notification.save()     # mark as read
@@ -180,15 +229,21 @@ def user_management(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])    # hash the password before saving
-            user.save()
-            messages.success(request, 'Usuario creado correctamente.')
+            with transaction.atomic():
+                user = form.save(commit=False)
+                user.set_password(form.cleaned_data['password'])    # hash the password before saving
+                user.save()
+                teacher, teacher_created = ensure_teacher_profile(user)
+            if teacher:
+                estado_perfil = 'creado' if teacher_created else 'vinculado'
+                messages.success(request, f'Usuario profesor creado correctamente. Perfil docente {estado_perfil}: {teacher.teacher_id}.')
+            else:
+                messages.success(request, 'Usuario creado correctamente.')
             return redirect('user_management')
         else:
             messages.error(request, 'Error al crear el usuario.')
     
-    users = CustomUser.objects.all()
+    users = CustomUser.objects.filter(is_active=True)
     context = {
         'users': users,
         'form': form,
@@ -417,11 +472,17 @@ def accept_representative_invitation(request, token):
 @user_passes_test(is_admin, login_url='iniciar_sesion')
 def edit_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
+    previous_email = user.email
     if request.method == 'POST':
         form = UserEditForm(request.POST, instance=user)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Usuario actualizado correctamente.')
+            user = form.save()
+            teacher, teacher_created = ensure_teacher_profile(user, previous_email=previous_email)
+            if teacher:
+                estado_perfil = 'creado' if teacher_created else 'vinculado'
+                messages.success(request, f'Usuario actualizado correctamente. Perfil docente {estado_perfil}.')
+            else:
+                messages.success(request, 'Usuario actualizado correctamente.')
             return redirect('user_management')
     else:
         form = UserEditForm(instance=user)
@@ -437,10 +498,10 @@ def toggle_lock_user(request, user_id):
     user.is_locked = not user.is_locked
     if user.is_locked:
         user.locked_at = timezone.now()
-        messages.success(request, f'User {user.email} locked.')
+        messages.success(request, f'Usuario {user.email} bloqueado.')
     else:
         user.locked_at = None
-        messages.success(request, f'User {user.email} unlocked.')
+        messages.success(request, f'Usuario {user.email} desbloqueado.')
     user.save()
     return redirect('user_management')
 
@@ -450,6 +511,32 @@ def toggle_lock_user(request, user_id):
 @require_POST
 def delete_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
-    user.delete()
-    messages.success(request, 'Usuario eliminado correctamente.')
+    user.is_active = False
+    user.is_locked = True
+    user.locked_at = timezone.now()
+    user.save(update_fields=['is_active', 'is_locked', 'locked_at'])
+    log_audit(request, 'desactivar_usuario', user, f'Desactivo usuario {user.email}.')
+    messages.success(request, 'Usuario desactivado correctamente.')
     return redirect('user_management')
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+def deactivated_users(request):
+    users = CustomUser.objects.filter(is_active=False).order_by('email')
+    return render(request, 'escuela/usuarios-desactivados.html', {'users': users})
+
+
+@login_required(login_url='iniciar_sesion')
+@user_passes_test(is_admin, login_url='iniciar_sesion')
+@require_POST
+def restore_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id, is_active=False)
+    user.is_active = True
+    user.is_locked = False
+    user.locked_at = None
+    user.failed_login_attempts = 0
+    user.save(update_fields=['is_active', 'is_locked', 'locked_at', 'failed_login_attempts'])
+    log_audit(request, 'restaurar_usuario', user, f'Restauro usuario {user.email}.')
+    messages.success(request, 'Usuario restaurado correctamente.')
+    return redirect('deactivated_users')

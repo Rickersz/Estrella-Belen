@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from escuela.models import active_academic_year_default
 
 
 class Constancia(models.Model):
@@ -26,7 +27,7 @@ class Constancia(models.Model):
 	student = models.ForeignKey('estudiante.Student', on_delete=models.CASCADE)
 	issued_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
 	date_issued = models.DateField(auto_now_add=True)
-	academic_year = models.CharField(max_length=9, default='2025-2026')
+	academic_year = models.CharField(max_length=9, default=active_academic_year_default)
 	representative_name = models.CharField(max_length=150, blank=True)
 	representative_id = models.CharField(max_length=30, blank=True)
 	amount_paid = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)

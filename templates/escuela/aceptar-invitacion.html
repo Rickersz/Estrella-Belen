@@ -14,6 +14,7 @@
           <img src="{% static 'assets/img/logo.png' %}" alt="Logo Estrella de Belen" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,0.04);padding:6px">
           <h1 class="login-form-title" style="font-size:1.45rem;margin-top:14px">Activar Portal de Padres</h1>
           <p class="login-form-subtitle">Crea tu contraseña para acceder a la informacion de tus estudiantes.</p>
+          <p class="login-form-subtitle" style="font-size:0.78rem;color:#F7CF0D">Mínimo 16 caracteres, con mayúscula, minúscula, número y carácter especial.</p>
         </div>
         <form method="post">
           {% csrf_token %}
@@ -21,6 +22,7 @@
           <div class="login-field-group">
             <label class="login-field-label">{{ field.label }}</label>
             {{ field }}
+            {% if field.help_text %}<div class="text-muted small mt-1">{{ field.help_text }}</div>{% endif %}
             {% for error in field.errors %}<div class="login-alert mt-2">{{ error }}</div>{% endfor %}
           </div>
           {% endfor %}

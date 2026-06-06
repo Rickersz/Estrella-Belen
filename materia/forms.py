@@ -33,6 +33,8 @@ class AssignmentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['subject'].queryset = Subject.objects.filter(is_archived=False)
+        self.fields['teacher'].queryset = self.fields['teacher'].queryset.filter(is_archived=False)
         self.fields['class_assigned'].empty_label = "Selecciona una clase"
         self.fields['subject'].empty_label = "Selecciona una materia"
         self.fields['teacher'].empty_label = "Selecciona un profesor"

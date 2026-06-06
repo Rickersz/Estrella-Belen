@@ -1,5 +1,6 @@
 from django import forms
 
+from escuela.validators import validate_phone
 from .models import Teacher
 
 
@@ -34,9 +35,9 @@ class TeacherForm(forms.ModelForm):
         return email
 
     def clean_mobile_number(self):
-        mobile = self.cleaned_data['mobile_number'].strip()
+        mobile = validate_phone(self.cleaned_data['mobile_number'], 'telefono')
         if len(mobile) < 7:
-            raise forms.ValidationError('El teléfono debe tener al menos 7 caracteres.')
+            raise forms.ValidationError('El telefono debe tener al menos 7 caracteres.')
         return mobile
 
     def clean(self):

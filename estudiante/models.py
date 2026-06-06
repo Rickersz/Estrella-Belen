@@ -56,7 +56,7 @@ class Student(models.Model):
     # PERSONAL
     gender = models.CharField(
         max_length=10,
-        choices=[('Male', 'Male'), ('Female', 'Female'), ('Others', 'Others')]
+        choices=[('Male', 'Masculino'), ('Female', 'Femenino'), ('Others', 'Otro')]
     )
 
     date_of_birth = models.DateField()
@@ -91,6 +91,7 @@ class Student(models.Model):
     observaciones = models.TextField(blank=True, null=True)
     parent = models.ForeignKey('Parent', on_delete=models.CASCADE, null=True, blank=True)
     student_image = models.ImageField(upload_to='students/', null=True, blank=True)
+    is_archived = models.BooleanField(default=False)
     
     @property
     def grado_completo(self):
